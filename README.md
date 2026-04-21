@@ -1,2 +1,47 @@
-# 2026-1-progeficaz-projeto3-back-super-awesome-team
-2026-1-progeficaz-projeto3-back-super-awesome-team created by GitHub Classroom
+# Projeto 3 Programação Eficaz ( BACKEND ) - Super Awesome Team
+
+[![Flask](https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/) [![uv](https://img.shields.io/badge/uv-111111?style=for-the-badge&logo=uv&logoColor=white)](https://docs.astral.sh/uv/)
+
+Este repositório contém o backend do Projeto 3 da disciplina de Programação Eficaz.
+
+## Equipe
+
+- Brenda Lima
+- Mateus Ahn
+- Miqueias Ayron
+- Pedro Pereira
+- Victor Costa
+
+## Instruções de sincronização e instalação de dependências
+
+Usaremos o gerenciador de pacotes Python `uv`. Se você ainda não tem o `uv` na sua máquina, execute no terminal:
+
+```shell
+pip install uv
+```
+
+Ou, caso não tenha o Python configurado como variável de ambiente:
+
+```shell
+py -m pip install uv
+```
+
+Após a instalação, abra o terminal e execute, no diretório do projeto:
+
+```shell
+uv sync
+```
+
+- Isso vai criar um ambiente virtual com todas as dependências contidas no arquivo `uv.lock`.
+- Você não precisa ativar o ambiente manualmente. Sempre que abrir o terminal, o ambiente será inicializado automaticamente.
+
+Para instalar uma nova dependência, execute:
+
+```shell
+uv add nome-da-biblioteca
+```
+
+- A dependência instalada é automaticamente listada no `uv.lock`, então, quando você fizer um _commit_, isso sobe para o repositório remoto.
+- Quando outro membro da equipe fizer _pull_, basta usar `uv sync` para sincronizar as dependências contidas no `uv.lock` com o ambiente virtual e tudo estará pronto.
+
+Em caso de dúvida, clique nos ícones do topo para acessar as respectivas documentações.
