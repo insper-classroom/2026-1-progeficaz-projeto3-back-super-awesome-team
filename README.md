@@ -12,6 +12,67 @@ Este repositório contém o backend do Projeto 3 da disciplina de Programação 
 - Pedro Pereira
 - Victor Costa
 
+## Comandos GIT
+
+- Listar `branchs` locais: 
+```bash
+    git branch
+```
+- Criar nova `branch` localmente:
+```bash
+    git branch nome-da-branch
+```
+- Mudar para outra `branch`:
+```bash
+    git switch nome-da-outra-branch
+```
+- Criar `branch` e já mudar para a nova `branch`:
+```bash
+    git checkout -b nome-da-branch
+```
+- Deletar `branch` localmente:
+```bash
+    git branch -D nome-da-branch
+```
+- Deletar `branch` do repositório remoto ( github ):
+```bash
+    git push origin --delete nome-da-branch
+```
+- Verificar status de local changes:
+```bash
+    git status
+```
+- Escolher arquivos alterados que serão commitados ( adiciona à `Staging Area`):
+```bash
+    git add nome-do-arquivo1 nome-do-arquivo2 nome_do_arquivo3 
+```
+- Adicionar Diretório ( Pasta ) à `Staging Area`:
+```bash
+    git add nome-da-pasta/
+```
+- Adicionar TODAS as alterações do diretório atual na `Staging Area`:
+```bash
+    git add .
+```
+- Adiconar arquivos por extensão à `Staging Area`:
+    - Ex:
+    ```bash
+    git add *.css
+    ```
+    Adicona todos os arquivos CSS.
+
+- Commita na `branch` atual ( Sobe para o Repositório Local )
+```bash
+    git commit -m 'nome-do-commit'
+```
+                        │
+                        ▼
+
+- Subir `branch` para o repositório remoto ( github ):
+```bash
+    git push -u origin nome-da-branch
+```
+
 ## Instruções de sincronização e instalação de dependências
 
 Usaremos o gerenciador de pacotes Python `uv`. Se você ainda não tem o `uv` na sua máquina, execute no terminal:
