@@ -51,3 +51,12 @@ Em caso de dúvida, clique nos ícones do topo para acessar as respectivas docum
     MONGODB_URI=mongodb+srv://usuario:<senha>@project3.7pbdixa.mongodb.net/?appName=project3
 ```
 
+## Rodando a Aplicação
+```py
+    uv run app.py
+```
+
+## Modularização
+
+### Fluxo da Requisição
+![alt text](img/flask_request_flow.svg)
