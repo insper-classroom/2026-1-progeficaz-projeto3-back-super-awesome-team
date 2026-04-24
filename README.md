@@ -45,3 +45,9 @@ uv add nome-da-biblioteca
 - Quando outro membro da equipe fizer _pull_, basta usar `uv sync` para sincronizar as dependências contidas no `uv.lock` com o ambiente virtual e tudo estará pronto.
 
 Em caso de dúvida, clique nos ícones do topo para acessar as respectivas documentações.
+
+## Configuracao do .env
+```py 
+    MONGODB_URI=mongodb+srv://usuario:<senha>@project3.7pbdixa.mongodb.net/?appName=project3
+```
+
