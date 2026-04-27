@@ -110,6 +110,9 @@ Em caso de dúvida, clique nos ícones do topo para acessar as respectivas docum
 ## Configuracao do .env
 ```py 
     MONGODB_URI=mongodb+srv://usuario:<senha>@project3.7pbdixa.mongodb.net/?appName=project3
+    CLIENT_ID=placeholder
+    CLIENT_SECRET=placeholder
+    REFRESH_TOKEN=placeholder
 ```
 
 ## Rodando a Aplicação
