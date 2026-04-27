@@ -3,13 +3,14 @@ from email.mime.text import MIMEText
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from google.auth.transport.requests import Request
+import os
+from dotenv import load_dotenv
 
-
+load_dotenv()
 def enviar_email(subject, body, to_email):
-    CLIENT_ID = "placeholder"
-    CLIENT_SECRET = "placeholder"
-    REFRESH_TOKEN = "placeholder"
-
+    CLIENT_ID = str(os.getenv("CLIENT_ID"))
+    CLIENT_SECRET = str(os.getenv("CLIENT_SECRET"))
+    REFRESH_TOKEN = str(os.getenv("REFRESH_TOKEN"))
     creds = Credentials(
         token=None,
         refresh_token=REFRESH_TOKEN,
