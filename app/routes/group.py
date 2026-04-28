@@ -1,8 +1,8 @@
 from flask import Blueprint, request, jsonify
 from ..extensions import mongo
-from ..models.group import Group
-from ..services.group_services import create_group_service
-from ..utils.jwt_utils import jwt_required
+from ..models import Group
+from ..services import create_group_service
+from ..utils import jwt_required
 
 group_bp = Blueprint('group', __name__)
 

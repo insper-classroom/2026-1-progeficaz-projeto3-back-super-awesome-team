@@ -1,7 +1,7 @@
 import bcrypt
 from ..extensions import mongo
-from ..schemas.auth_schema import LoginSchema
-from ..utils.jwt_utils import generate_token
+from ..schemas import LoginSchema
+from ..utils import generate_token
 
 schema = LoginSchema()
 
