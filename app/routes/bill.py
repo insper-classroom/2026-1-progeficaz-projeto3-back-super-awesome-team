@@ -1,8 +1,8 @@
 from flask import Blueprint, request, jsonify
 from ..extensions import mongo
-from ..models.bill import Bill
-from ..services.bill_services import create_bill_service
-from ..utils.jwt_utils import jwt_required
+from ..models import Bill
+from ..services import create_bill_service
+from ..utils import jwt_required
 
 bill_bp = Blueprint('bill', __name__)
 

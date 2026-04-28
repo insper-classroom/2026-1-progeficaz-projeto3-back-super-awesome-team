@@ -1,6 +1,6 @@
-from ..models.bill import Bill
+from ..models import Bill
 from ..extensions import mongo
-from ..schemas.bill_schema import BillSchema
+from ..schemas import BillSchema
 from bson.objectid import ObjectId
 
 schema = BillSchema()
