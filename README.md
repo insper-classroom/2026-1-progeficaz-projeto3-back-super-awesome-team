@@ -115,12 +115,38 @@ Em caso de dúvida, clique nos ícones do topo para acessar as respectivas docum
     REFRESH_TOKEN=placeholder
 ```
 
-## Rodando a Aplicação
-```py
-    uv run app.py
+## Subindo com o servidor gunicorn
+- **desenvolvimento**: servidor single-thread, reload automático ao salvar, mensagens de erro detalhadas no browser ( mas roda síncrono )
+```bash
+    uv run flask --app wsgi:app run --debug
+```
+- **produção**: múltiplos workers, gevent, robusto, sem reload automático ( roda assíncrono )
+```bash
+    uv run gunicorn wsgi:app
 ```
 
 ## Modularização
 
 ### Fluxo da Requisição
 ![alt text](img/flask_request_flow.svg)
+
+# Assincronismo no Flask
+
+## Concorrência com Gevent
+
+O gevent usa concorrência cooperativa — uma greenlet só cede o controle quando chega numa operação de I/O (query no banco, chamada HTTP, etc.), e só volta a executar quando essa operação retorna o resultado.
+
+Então dentro de uma requisição, o código continua sequencial:
+
+
+```py
+existing = mongo['users'].find_one(...)  # cede o controle, MAS espera o resultado
+if existing:                              # só executa depois do find_one retornar
+    return None, {'error': '...'}
+```
+
+O gevent permite que outra requisição rode enquanto essa espera o banco, mas **nunca avança para a linha seguinte sem ter o resultado.**
+
+O único lugar onde coisas rodam de forma verdadeiramente paralela é o `gevent.spawn` — que você usou explicitamente para o email, justamente porque ele não afeta a resposta.
+
+O risco real existe entre **requisições diferentes** rodando concorrentemente — por exemplo, dois cadastros com o mesmo email passando no ``find_one`` ao mesmo tempo antes de qualquer um inserir. Mas isso é um problema de qualquer sistema concorrente, resolvido com índice único no MongoDB, não com controle de concorrência no código.

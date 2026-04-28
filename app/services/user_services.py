@@ -1,11 +1,16 @@
-from ..models.user import User
+from ..models import User
 from ..extensions import mongo
-from ..schemas.user_schema import UserSchema
-from ..utils.email_utils import enviar_email
+from ..schemas import UserSchema
+from ..utils import send_email
 from bson import ObjectId
+
 import bcrypt
+import gevent
 
 schema = UserSchema()
+
+def _email_error_handler(greenlet):
+    print(f'Erro ao enviar e-mail: {greenlet.exception}')
 
 def create_user_service(data):
     erros = schema.validate(data)
@@ -23,10 +28,7 @@ def create_user_service(data):
     # Envia e-mail de boas-vindas
     subject = "Bem-vindo!"
     body = f"Olá {data['name']},\n\nBem-vindo à nossa plataforma! Estamos empolgados em ter você conosco.\n\nAtenciosamente,\nFinance Group"
-    try:
-        enviar_email(subject, body, data['email'])
-    except Exception as e:
-        print(f"Erro ao enviar e-mail: {e}")
+    gevent.spawn(send_email, subject, body, data['email']).link_exception(_email_error_handler)
     
     return {'message': 'OK ✅'}, None
 
