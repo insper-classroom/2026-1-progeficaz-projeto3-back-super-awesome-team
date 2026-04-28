@@ -1,8 +1,8 @@
 from flask import Blueprint, request, jsonify
 from ..extensions import mongo
-from ..models.user import User
-from ..services.user_services import create_user_service
-from ..utils.jwt_utils import jwt_required
+from ..models import User
+from ..services import create_user_service
+from ..utils import jwt_required
 
 user_bp = Blueprint('user', __name__)
 

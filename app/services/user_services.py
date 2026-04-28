@@ -1,7 +1,7 @@
-from ..models.user import User
+from ..models import User
 from ..extensions import mongo
-from ..schemas.user_schema import UserSchema
-from ..utils.email_utils import enviar_email
+from ..schemas import UserSchema
+from ..utils import send_email
 import bcrypt
 
 schema = UserSchema()
@@ -23,7 +23,7 @@ def create_user_service(data):
     subject = "Bem-vindo!"
     body = f"Olá {data['name']},\n\nBem-vindo à nossa plataforma! Estamos empolgados em ter você conosco.\n\nAtenciosamente,\nFinance Group"
     try:
-        enviar_email(subject, body, data['email'])
+        send_email(subject, body, data['email'])
     except Exception as e:
         print(f"Erro ao enviar e-mail: {e}")
     

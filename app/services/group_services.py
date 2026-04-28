@@ -1,6 +1,6 @@
-from ..models.group import Group
+from ..models import Group
 from ..extensions import mongo
-from ..schemas.group_schema import GroupSchema
+from ..schemas import GroupSchema
 
 schema = GroupSchema()
 
