@@ -5,7 +5,7 @@ from bson.objectid import ObjectId
 
 schema = BillSchema()
 
-def create_bill_service(data):
+def create_bill_service(data, created_by):
     erros = schema.validate(data)
     if erros:
         return None, erros
@@ -19,7 +19,14 @@ def create_bill_service(data):
             if member not in group['members']:
                 return None, {'error': f'Membro {member} não pertence ao grupo'}
         
-        bill = Bill(data["bill_type"], data["value"], data["group_id"], data["members_to_pay"])
+        bill = Bill(
+            data["bill_type"],
+            data["value"],
+            data["group_id"],
+            data["members_to_pay"],
+            created_by,
+            data.get("is_paid", False)
+        )
         result = mongo['bills'].insert_one(bill.to_dictionary())
         
         return {'message': 'Conta criada com sucesso', 'bill_id': str(result.inserted_id)}, None

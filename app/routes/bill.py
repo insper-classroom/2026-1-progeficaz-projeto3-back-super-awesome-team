@@ -10,7 +10,8 @@ bill_bp = Blueprint('bill', __name__)
 @jwt_required
 def create_bill():
     data = request.get_json()
-    result, error = create_bill_service(data)
+    user_email = request.current_user
+    result, error = create_bill_service(data, user_email)
     if error:
         return jsonify(error), 400
     return jsonify(result), 201
