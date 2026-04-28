@@ -30,7 +30,7 @@ def get_users():
 @jwt_required
 def update_users():
     data = request.get_json()
-    user_id = data.get("user_id")
+    user_id = data.pop("user_id", None)
 
     if not user_id:
         return jsonify({"error": "user_id é obrigatório"}), 400
