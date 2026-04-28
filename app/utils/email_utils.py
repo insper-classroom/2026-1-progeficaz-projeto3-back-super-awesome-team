@@ -12,7 +12,7 @@ CLIENT_ID = str(os.getenv("CLIENT_ID"))
 CLIENT_SECRET = str(os.getenv("CLIENT_SECRET"))
 REFRESH_TOKEN = str(os.getenv("REFRESH_TOKEN"))
 
-def enviar_email(subject, body, to_email):
+def send_email(subject, body, to_email):
     creds = Credentials(
         token=None,
         refresh_token=REFRESH_TOKEN,
