@@ -4,13 +4,17 @@ from ..schemas.group_schema import GroupSchema
 
 schema = GroupSchema()
 
-def create_group_service(data):
+def create_group_service(data, user_email):
     erros = schema.validate(data)
     if erros:
         return None, erros
     
     try:
-        group = Group(data["name"], data["members"], data.get("description"))
+        members = data.get("members", []) or []
+        if user_email not in members:
+            members.insert(0, user_email)
+        
+        group = Group(data["name"], members, data.get("description"))
         mongo['groups'].insert_one(group.to_dictionary())
         return {'message': 'Grupo criado com sucesso'}, None
     except ValueError as e:
