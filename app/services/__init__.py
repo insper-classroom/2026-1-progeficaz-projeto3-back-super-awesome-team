@@ -4,7 +4,10 @@ from .user_services import create_user_service, update_user_service
 from .bill_services import create_bill_service, mark_bill_as_paid_service
 
 __all__ = [
-    'login_service', 'create_group_service', 'create_user_service', 
-    'update_user_service', 'create_bill_service', 'mark_bill_as_paid_service'
-    ]
-
+    "login_service",
+    "create_group_service",
+    "create_user_service",
+    "update_user_service",
+    "create_bill_service",
+    "mark_bill_as_paid_service",
+]

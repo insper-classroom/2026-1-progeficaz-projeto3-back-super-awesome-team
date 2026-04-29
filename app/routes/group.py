@@ -4,9 +4,10 @@ from ..models import Group
 from ..services import create_group_service
 from ..utils import jwt_required
 
-group_bp = Blueprint('group', __name__)
+group_bp = Blueprint("group", __name__)
 
-@group_bp.route('/group', methods=['POST'])
+
+@group_bp.route("/group", methods=["POST"])
 @jwt_required
 def create_group():
     data = request.get_json()

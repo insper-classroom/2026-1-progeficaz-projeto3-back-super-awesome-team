@@ -1,4 +1,5 @@
 from dotenv import load_dotenv
+
 load_dotenv()
 
 from flask import Flask
@@ -8,6 +9,7 @@ from .routes import auth_bp
 from .routes import group_bp
 from .routes import bill_bp
 from .routes import pendency_bp
+
 
 def create_app():
     app = Flask(__name__)

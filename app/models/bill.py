@@ -1,7 +1,16 @@
 from datetime import datetime
 
+
 class Bill:
-    def __init__(self, bill_type, total_value, group_id, members_to_pay, created_by, is_paid=False):
+    def __init__(
+        self,
+        bill_type,
+        total_value,
+        group_id,
+        members_to_pay,
+        created_by,
+        is_paid=False,
+    ):
         if not bill_type:
             raise ValueError("Tipo de conta é obrigatório")
         if not total_value or total_value <= 0:
@@ -29,5 +38,5 @@ class Bill:
             "members_to_pay": self.members_to_pay,
             "created_by": self.created_by,
             "is_paid": self.is_paid,
-            "created_at": self.created_at
+            "created_at": self.created_at,
         }

@@ -17,4 +17,16 @@ dependencies = [
     "pyjwt>=2.12.1",
     "pymongo[srv]>=4.17.0",
     "python-dotenv>=1.2.2",
+    "ruff>=0.15.12",
 ]
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = []
+ignore = ["ALL"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

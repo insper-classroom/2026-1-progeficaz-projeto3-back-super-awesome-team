@@ -12,6 +12,7 @@ CLIENT_ID = str(os.getenv("CLIENT_ID"))
 CLIENT_SECRET = str(os.getenv("CLIENT_SECRET"))
 REFRESH_TOKEN = str(os.getenv("REFRESH_TOKEN"))
 
+
 def send_email(subject, body, to_email):
     creds = Credentials(
         token=None,
@@ -19,20 +20,17 @@ def send_email(subject, body, to_email):
         token_uri="https://oauth2.googleapis.com/token",
         client_id=CLIENT_ID,
         client_secret=CLIENT_SECRET,
-        scopes=["https://www.googleapis.com/auth/gmail.send"]
+        scopes=["https://www.googleapis.com/auth/gmail.send"],
     )
 
     creds.refresh(Request())
 
-    service = build('gmail', 'v1', credentials=creds)
+    service = build("gmail", "v1", credentials=creds)
 
     message = MIMEText(body)
-    message['to'] = to_email
-    message['subject'] = subject
+    message["to"] = to_email
+    message["subject"] = subject
 
     raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
 
-    return service.users().messages().send(
-        userId='me',
-        body={'raw': raw}
-    ).execute()
+    return service.users().messages().send(userId="me", body={"raw": raw}).execute()

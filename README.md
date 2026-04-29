@@ -14,61 +14,86 @@ Este repositório contém o backend do Projeto 3 da disciplina de Programação 
 
 ## Comandos GIT
 
-- Listar `branchs` locais: 
+- Listar `branchs` locais:
+
 ```bash
     git branch
 ```
+
 - Criar nova `branch` localmente:
+
 ```bash
     git branch nome-da-branch
 ```
+
 - Mudar para outra `branch`:
+
 ```bash
     git switch nome-da-outra-branch
 ```
+
 - Criar `branch` e já mudar para a nova `branch`:
+
 ```bash
     git checkout -b nome-da-branch
 ```
+
 - Deletar `branch` localmente:
+
 ```bash
     git branch -D nome-da-branch
 ```
+
 - Deletar `branch` do repositório remoto ( github ):
+
 ```bash
     git push origin --delete nome-da-branch
 ```
+
 - Verificar status de local changes:
+
 ```bash
     git status
 ```
+
 - Escolher arquivos alterados que serão commitados ( adiciona à `Staging Area`):
+
 ```bash
-    git add nome-do-arquivo1 nome-do-arquivo2 nome_do_arquivo3 
+    git add nome-do-arquivo1 nome-do-arquivo2 nome_do_arquivo3
 ```
+
 - Adicionar Diretório ( Pasta ) à `Staging Area`:
+
 ```bash
     git add nome-da-pasta/
 ```
+
 - Adicionar TODAS as alterações do diretório atual na `Staging Area`:
+
 ```bash
     git add .
 ```
+
 - Adiconar arquivos por extensão à `Staging Area`:
-    - Ex:
-    ```bash
-    git add *.css
-    ```
-    Adicona todos os arquivos CSS.
+  - Ex:
+
+  ```bash
+  git add *.css
+  ```
+
+  Adicona todos os arquivos CSS.
 
 - Commita na `branch` atual ( Sobe para o Repositório Local )
+
 ```bash
     git commit -m 'nome-do-commit'
 ```
+
                         │
                         ▼
 
 - Subir `branch` para o repositório remoto ( github ):
+
 ```bash
     git push -u origin nome-da-branch
 ```
@@ -108,7 +133,8 @@ uv add nome-da-biblioteca
 Em caso de dúvida, clique nos ícones do topo para acessar as respectivas documentações.
 
 ## Configuracao do .env
-```py 
+
+```py
     MONGODB_URI=mongodb+srv://usuario:<senha>@project3.7pbdixa.mongodb.net/?appName=project3
     CLIENT_ID=placeholder
     CLIENT_SECRET=placeholder
@@ -116,11 +142,15 @@ Em caso de dúvida, clique nos ícones do topo para acessar as respectivas docum
 ```
 
 ## Subindo com o servidor gunicorn
+
 - **desenvolvimento**: servidor single-thread, reload automático ao salvar, mensagens de erro detalhadas no browser ( mas roda síncrono )
+
 ```bash
     uv run flask --app wsgi:app run --debug
 ```
+
 - **produção**: múltiplos workers, gevent, robusto, sem reload automático ( roda assíncrono )
+
 ```bash
     uv run gunicorn wsgi:app
 ```
@@ -128,6 +158,7 @@ Em caso de dúvida, clique nos ícones do topo para acessar as respectivas docum
 ## Modularização
 
 ### Fluxo da Requisição
+
 ![alt text](img/flask_request_flow.svg)
 
 # Assincronismo no Flask
@@ -137,7 +168,6 @@ Em caso de dúvida, clique nos ícones do topo para acessar as respectivas docum
 O gevent usa concorrência cooperativa — uma greenlet só cede o controle quando chega numa operação de I/O (query no banco, chamada HTTP, etc.), e só volta a executar quando essa operação retorna o resultado.
 
 Então dentro de uma requisição, o código continua sequencial:
-
 
 ```py
 existing = mongo['users'].find_one(...)  # cede o controle, MAS espera o resultado
@@ -149,4 +179,4 @@ O gevent permite que outra requisição rode enquanto essa espera o banco, mas *
 
 O único lugar onde coisas rodam de forma verdadeiramente paralela é o `gevent.spawn` — que você usou explicitamente para o email, justamente porque ele não afeta a resposta.
 
-O risco real existe entre **requisições diferentes** rodando concorrentemente — por exemplo, dois cadastros com o mesmo email passando no ``find_one`` ao mesmo tempo antes de qualquer um inserir. Mas isso é um problema de qualquer sistema concorrente, resolvido com índice único no MongoDB, não com controle de concorrência no código.
+O risco real existe entre **requisições diferentes** rodando concorrentemente — por exemplo, dois cadastros com o mesmo email passando no `find_one` ao mesmo tempo antes de qualquer um inserir. Mas isso é um problema de qualquer sistema concorrente, resolvido com índice único no MongoDB, não com controle de concorrência no código.
