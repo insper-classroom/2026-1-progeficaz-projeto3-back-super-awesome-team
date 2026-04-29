@@ -1,5 +1,6 @@
 from marshmallow import Schema, fields, validate
 
+
 class PendencySchema(Schema):
     bill_id = fields.Str(required=True)
     debtor_email = fields.Str(required=True)

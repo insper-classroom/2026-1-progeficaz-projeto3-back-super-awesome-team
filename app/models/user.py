@@ -5,8 +5,4 @@ class User:
         self.password = password
 
     def to_dictionary(self):
-        return {
-            "name": self.name,
-            "email": self.email,
-            "password": self.password
-        }
+        return {"name": self.name, "email": self.email, "password": self.password}

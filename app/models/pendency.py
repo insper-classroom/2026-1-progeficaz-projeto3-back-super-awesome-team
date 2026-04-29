@@ -1,7 +1,16 @@
 from datetime import datetime
 
+
 class Pendency:
-    def __init__(self, bill_id, debtor_email, creditor_email, value, debtor_confirmed=False, creditor_confirmed=False):
+    def __init__(
+        self,
+        bill_id,
+        debtor_email,
+        creditor_email,
+        value,
+        debtor_confirmed=False,
+        creditor_confirmed=False,
+    ):
         if not bill_id:
             raise ValueError("Bill ID é obrigatório")
         if not debtor_email:
@@ -29,5 +38,5 @@ class Pendency:
             "value": self.value,
             "debtor_confirmed": self.debtor_confirmed,
             "creditor_confirmed": self.creditor_confirmed,
-            "created_at": self.created_at
+            "created_at": self.created_at,
         }

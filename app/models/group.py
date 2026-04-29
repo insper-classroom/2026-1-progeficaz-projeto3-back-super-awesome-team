@@ -1,5 +1,6 @@
 from datetime import datetime
 
+
 class Group:
     def __init__(self, name, members, description=None):
         if not name:
@@ -17,5 +18,5 @@ class Group:
             "name": self.name,
             "members": self.members,
             "description": self.description,
-            "created_at": self.created_at
+            "created_at": self.created_at,
         }
