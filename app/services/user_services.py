@@ -1,7 +1,7 @@
 from ..models import User
 from ..extensions import mongo
 from ..schemas import UserSchema
-from ..utils import send_email
+from ..utils import send_email, get_user_by_email
 from bson import ObjectId
 
 import bcrypt
@@ -17,7 +17,7 @@ def create_user_service(data):
     if erros:
         return None, erros
 
-    existing = mongo['users'].find_one({'email': data['email']})
+    existing = get_user_by_email(data['email'])
     if existing:
         return None, {'error': 'email já cadastrado'}
 
