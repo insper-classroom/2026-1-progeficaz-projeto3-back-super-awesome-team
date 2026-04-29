@@ -16,13 +16,14 @@ def create_bill_service(data, created_by):
         if not group:
             return None, {'error': 'Grupo não encontrado'}
         
-        for member in data["members_to_pay"]:
-            if member not in group['members']:
-                return None, {'error': f'Membro {member} não pertence ao grupo'}
+        for member_data in data["members_to_pay"]:
+            member_email = member_data["email"]
+            if member_email not in group['members']:
+                return None, {'error': f'Membro {member_email} não pertence ao grupo'}
         
         bill = Bill(
             data["bill_type"],
-            data["value"],
+            data["total_value"],
             data["group_id"],
             data["members_to_pay"],
             created_by,
@@ -33,9 +34,8 @@ def create_bill_service(data, created_by):
         
         pendencies, pendency_error = create_pendencies_for_bill(
             bill_id=bill_id,
-            creditor_id=created_by,
-            members_to_pay=data["members_to_pay"],
-            value=data["value"]
+            creditor_email=created_by,
+            members_to_pay=data["members_to_pay"]
         )
         
         if pendency_error:

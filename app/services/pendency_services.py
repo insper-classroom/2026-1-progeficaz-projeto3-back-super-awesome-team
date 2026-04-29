@@ -5,18 +5,21 @@ from bson.objectid import ObjectId
 
 schema = PendencySchema()
 
-def create_pendencies_for_bill(bill_id, creditor_id, members_to_pay, value):
+def create_pendencies_for_bill(bill_id, creditor_email, members_to_pay):
     try:
         pendencies = []
-        for member_id in members_to_pay:
-            if member_id == creditor_id:
+        for member_data in members_to_pay:
+            member_email = member_data["email"]
+            member_value = member_data["value"]
+            
+            if member_email == creditor_email:
                 continue
             
             pendency = Pendency(
                 bill_id=bill_id,
-                debtor_id=member_id,
-                creditor_id=creditor_id,
-                value=value
+                debtor_email=member_email,
+                creditor_email=creditor_email,
+                value=member_value
             )
             result = mongo['pendencies'].insert_one(pendency.to_dictionary())
             pendencies.append(str(result.inserted_id))
@@ -28,14 +31,14 @@ def create_pendencies_for_bill(bill_id, creditor_id, members_to_pay, value):
         return None, {'error': str(e)}
 
 
-def confirm_debtor_payment_service(pendency_id, user_id):
+def confirm_debtor_payment_service(pendency_id, user_email):
     try:
         pendency = mongo['pendencies'].find_one({'_id': ObjectId(pendency_id)})
         
         if not pendency:
             return None, {'error': 'Pendência não encontrada'}
         
-        if pendency['debtor_id'] != user_id:
+        if pendency['debtor_email'] != user_email:
             return None, {'error': 'Apenas o devedor pode confirmar o pagamento'}
         
         mongo['pendencies'].update_one(
@@ -48,14 +51,14 @@ def confirm_debtor_payment_service(pendency_id, user_id):
         return None, {'error': str(e)}
 
 
-def confirm_creditor_payment_service(pendency_id, user_id):
+def confirm_creditor_payment_service(pendency_id, user_email):
     try:
         pendency = mongo['pendencies'].find_one({'_id': ObjectId(pendency_id)})
         
         if not pendency:
             return None, {'error': 'Pendência não encontrada'}
         
-        if pendency['creditor_id'] != user_id:
+        if pendency['creditor_email'] != user_email:
             return None, {'error': 'Apenas o credor pode confirmar o recebimento'}
         
         mongo['pendencies'].update_one(
@@ -68,10 +71,10 @@ def confirm_creditor_payment_service(pendency_id, user_id):
         return None, {'error': str(e)}
 
 
-def get_user_pendencies_service(user_id):
+def get_user_pendencies_service(user_email):
     try:
-        pendencies_as_debtor = list(mongo['pendencies'].find({'debtor_id': user_id}))
-        pendencies_as_creditor = list(mongo['pendencies'].find({'creditor_id': user_id}))
+        pendencies_as_debtor = list(mongo['pendencies'].find({'debtor_email': user_email}))
+        pendencies_as_creditor = list(mongo['pendencies'].find({'creditor_email': user_email}))
         
         # Convert ObjectId to string for JSON serialization
         for p in pendencies_as_debtor + pendencies_as_creditor:
