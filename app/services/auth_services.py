@@ -1,7 +1,7 @@
 import bcrypt
 from ..extensions import mongo
 from ..schemas import LoginSchema
-from ..utils import generate_token
+from ..utils import generate_token, get_user_by_email
 
 schema = LoginSchema()
 
@@ -10,7 +10,7 @@ def login_service(data):
     if errors:
         return None, errors
     
-    user = mongo['users'].find_one({'email':data['email']})
+    user = get_user_by_email(data['email'])
     if not user:
         return None, {'error':'Credenciais inválidas'}
     
