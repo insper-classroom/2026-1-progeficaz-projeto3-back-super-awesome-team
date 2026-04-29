@@ -180,3 +180,9 @@ O gevent permite que outra requisição rode enquanto essa espera o banco, mas *
 O único lugar onde coisas rodam de forma verdadeiramente paralela é o `gevent.spawn` — que você usou explicitamente para o email, justamente porque ele não afeta a resposta.
 
 O risco real existe entre **requisições diferentes** rodando concorrentemente — por exemplo, dois cadastros com o mesmo email passando no `find_one` ao mesmo tempo antes de qualquer um inserir. Mas isso é um problema de qualquer sistema concorrente, resolvido com índice único no MongoDB, não com controle de concorrência no código.
+
+## Formatador Automático
+
+Instale a extensão `ruff`
+
+![alt text](img/ruff.png)
