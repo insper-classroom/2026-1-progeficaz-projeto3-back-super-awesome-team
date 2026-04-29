@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from ..services.pendency_services import (
+from ..services import (
     confirm_debtor_payment_service,
     confirm_creditor_payment_service,
     get_user_pendencies_service,
