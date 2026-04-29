@@ -51,3 +51,23 @@ def create_bill_service(data, created_by):
         return None, {'error': str(e)}
     except Exception as e:
         return None, {'error': str(e)}
+
+
+def mark_bill_as_paid_service(bill_id, user_email):
+    try:
+        bill = mongo['bills'].find_one({'_id': ObjectId(bill_id)})
+        
+        if not bill:
+            return None, {'error': 'Conta não encontrada'}
+        
+        if bill['created_by'] != user_email:
+            return None, {'error': 'Apenas o criador da conta pode marcá-la como paga'}
+        
+        mongo['bills'].update_one(
+            {'_id': ObjectId(bill_id)},
+            {'$set': {'is_paid': True}}
+        )
+        
+        return {'message': 'Conta marcada como paga'}, None
+    except Exception as e:
+        return None, {'error': str(e)}

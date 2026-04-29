@@ -29,7 +29,7 @@ def get_pendency(pendency_id):
     return jsonify(result), 200
 
 
-@pendency_bp.route('/bills/<bill_id>/pendencies', methods=['GET'])
+@pendency_bp.route('/bill/<bill_id>/pendencies', methods=['GET'])
 @jwt_required
 def get_bill_pendencies(bill_id):
     result, error = get_bill_pendencies_service(bill_id)
