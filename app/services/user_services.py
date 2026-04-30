@@ -85,3 +85,16 @@ def update_user_service(user_id, data):
     mongo["users"].update_one({"_id": oid}, {"$set": updated_fields})
 
     return {"message": "Usuário atualizado com sucesso"}, None
+
+
+def verify_email_service(token):
+    user = mongo["users"].find_one({"verification_token": token})
+    if not user:
+        return None, {"error": "Token inválido ou expirado"}
+    if user.get("is_verified"):
+        return {"message": "Conta já verificada"}, None
+    mongo["users"].update_one(
+        {"verification_token": token},
+        {"$set": {"is_verified": True}, "$unset": {"verification_token": ""}},
+    )
+    return {"message": "E-mail confirmado com sucesso"}, None
