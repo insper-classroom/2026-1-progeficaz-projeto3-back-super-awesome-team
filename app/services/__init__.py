@@ -1,4 +1,4 @@
-from .auth_services import login_service
+from .auth_services import login_service, get_google_auth_url, google_callback_service
 from .group_services import create_group_service
 from .user_services import (
     create_user_service,
@@ -27,4 +27,6 @@ __all__ = [
     "get_bill_pendencies_service",
     "get_pendency_service",
     "verify_email_service",
+    "get_google_auth_url",
+    "google_callback_service",
 ]
