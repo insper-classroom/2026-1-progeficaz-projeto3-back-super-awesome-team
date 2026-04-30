@@ -1,8 +1,9 @@
 import bcrypt
+import gevent
 from ..extensions import mongo
 from ..models import User
 from ..schemas import LoginSchema
-from ..utils import generate_token, get_user_by_email
+from ..utils import generate_token, get_user_by_email, send_welcome_email
 import os
 from google_auth_oauthlib.flow import Flow
 from google.oauth2 import id_token
@@ -87,6 +88,7 @@ def google_callback_service(code, code_verifier=None):
             new_user = User(name, email, auth_provider="google")
             new_user.is_verified = True
             mongo["users"].insert_one(new_user.to_dictionary())
+            gevent.spawn(send_welcome_email, name, email)
 
         token = generate_token(email)
         return {"token": token}, None
