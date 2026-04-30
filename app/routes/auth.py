@@ -1,5 +1,5 @@
 import os
-from flask import Blueprint, request, jsonify, redirect
+from flask import Blueprint, request, jsonify, redirect, session
 from ..services import (
     login_service,
     verify_email_service,
@@ -32,7 +32,8 @@ def verify_email(token):
 @auth_bp.route("/auth/google", methods=["GET"])
 def google_login():
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
-    auth_url, state = get_google_auth_url()
+    auth_url, state, code_verifier = get_google_auth_url()
+    session["code_verifier"] = code_verifier
     return redirect(auth_url)
 
 
@@ -40,7 +41,8 @@ def google_login():
 def google_callback():
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
     code = request.args.get("code")
-    result, error = google_callback_service(code)
+    code_verifier = session.pop("code_verifier", None)
+    result, error = google_callback_service(code, code_verifier)
     if error:
         return jsonify(error), 400
     return jsonify(result), 200

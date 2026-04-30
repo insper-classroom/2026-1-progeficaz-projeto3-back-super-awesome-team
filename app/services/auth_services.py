@@ -43,8 +43,8 @@ GOOGLE_SCOPES = [
 
 GOOGLE_CLIENT_CONFIG = {
     "web": {
-        "client_id": os.getenv("CLIENT_ID"),
-        "client_secret": os.getenv("CLIENT_SECRET"),
+        "client_id": os.getenv("GOOGLE_WEB_CLIENT_ID"),
+        "client_secret": os.getenv("GOOGLE_WEB_CLIENT_SECRET"),
         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
         "token_uri": "https://oauth2.googleapis.com/token",
     }
@@ -60,23 +60,23 @@ def get_google_auth_url():
         redirect_uri=GOOGLE_REDIRECT_URI,
     )
     auth_url, state = flow.authorization_url(prompt="consent")
-    return auth_url, state
+    return auth_url, state, flow.code_verifier
 
 
-def google_callback_service(code):
+def google_callback_service(code, code_verifier=None):
     try:
         flow = Flow.from_client_config(
             GOOGLE_CLIENT_CONFIG,
             scopes=GOOGLE_SCOPES,
             redirect_uri=GOOGLE_REDIRECT_URI,
         )
-        flow.fetch_token(code=code)
+        flow.fetch_token(code=code, code_verifier=code_verifier)
         credentials = flow.credentials
 
         id_info = id_token.verify_oauth2_token(
             credentials.id_token,
             google_requests.Request(),
-            os.getenv("CLIENT_ID"),
+            os.getenv("GOOGLE_WEB_CLIENT_ID"),
         )
 
         email = id_info["email"]
