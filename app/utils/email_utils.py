@@ -13,6 +13,16 @@ CLIENT_SECRET = str(os.getenv("CLIENT_SECRET"))
 REFRESH_TOKEN = str(os.getenv("REFRESH_TOKEN"))
 
 
+def send_welcome_email(name, to_email):
+    subject = "Bem-vindo ao Finance Group!"
+    body = (
+        f"Olá {name},\n\n"
+        f"Sua conta foi criada com sucesso. Estamos felizes em ter você conosco!\n\n"
+        f"Atenciosamente,\nFinance Group"
+    )
+    return send_email(subject, body, to_email)
+
+
 def send_email(subject, body, to_email):
     creds = Credentials(
         token=None,

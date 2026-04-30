@@ -1,7 +1,7 @@
 from ..models import User
 from ..extensions import mongo
 from ..schemas import UserSchema, UpdateUserSchema
-from ..utils import send_email, get_user_by_email
+from ..utils import send_email, send_welcome_email, get_user_by_email
 from bson import ObjectId
 import bcrypt
 import gevent
@@ -93,8 +93,12 @@ def verify_email_service(token):
         return None, {"error": "Token inválido ou expirado"}
     if user.get("is_verified"):
         return {"message": "Conta já verificada"}, None
+    user = mongo["users"].find_one({"verification_token": token})
     mongo["users"].update_one(
         {"verification_token": token},
         {"$set": {"is_verified": True}, "$unset": {"verification_token": ""}},
+    )
+    gevent.spawn(send_welcome_email, user["name"], user["email"]).link_exception(
+        _email_error_handler
     )
     return {"message": "E-mail confirmado com sucesso"}, None
