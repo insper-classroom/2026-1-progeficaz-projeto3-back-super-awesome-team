@@ -29,8 +29,14 @@ def create_user_service(data):
     user = User(data["name"], data["email"], hashed)
     mongo["users"].insert_one(user.to_dictionary())
 
-    subject = "Bem-vindo!"
-    body = f"Olá {data['name']},\n\nBem-vindo à nossa plataforma! Estamos empolgados em ter você conosco.\n\nAtenciosamente,\nFinance Group"
+    token = user.verification_token
+    subject = "Confirme seu e-mail"
+    body = (
+        f"Olá {data['name']},\n\n"
+        f"Clique no link abaixo para confirmar sua conta:\n\n"
+        f"http://localhost:5000/auth/verify-email/{token}\n\n"
+        f"Se não foi você, ignore este e-mail."
+    )
     gevent.spawn(send_email, subject, body, data["email"]).link_exception(
         _email_error_handler
     )
