@@ -20,5 +20,8 @@ def login_service(data):
     ):
         return None, {"error": "Credenciais inválidas"}
 
+    if not user.get("is_verified", False):
+        return None, {"error": "E-mail ainda não verificado"}
+
     token = generate_token(data["email"])
     return {"token": token}, None
