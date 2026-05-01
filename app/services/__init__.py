@@ -13,6 +13,13 @@ from .pendency_services import (
     get_bill_pendencies_service,
     get_pendency_service,
 )
+from .expense_services import (
+    create_expense_service,
+    get_expense_service,
+    get_user_expenses_service,
+    update_expense_service,
+    delete_expense_service,
+)
 
 __all__ = [
     "login_service",
@@ -29,4 +36,9 @@ __all__ = [
     "verify_email_service",
     "get_google_auth_url",
     "google_callback_service",
+    "create_expense_service",
+    "get_expense_service",
+    "get_user_expenses_service",
+    "update_expense_service",
+    "delete_expense_service",
 ]
