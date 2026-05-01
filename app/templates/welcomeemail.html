@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bem-vindo ao Adapte Finance!</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@100;200;300;400;500;600;700&display=swap");
+    </style>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background-color: #000000;
+      font-family: Roboto, Arial, sans-serif;
+    "
+  >
+    <table
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      style="background-color: #000000; padding: 40px 0"
+    >
+      <tr>
+        <td align="center">
+          <table
+            width="550"
+            cellpadding="0"
+            cellspacing="0"
+            style="
+              background-color: #1a1a1a;
+              border-radius: 15px;
+              overflow: hidden;
+              max-width: 550px;
+              width: 100%;
+            "
+          >
+            <!-- Header com logo -->
+            <tr>
+              <td
+                style="
+                  border-radius: 15px 15px 0 0;
+                  background: linear-gradient(
+                    180deg,
+                    #afff46 69.69%,
+                    #73a434 100%
+                  );
+                  padding: 0;
+                  text-align: center;
+                  height: 173px;
+                "
+              >
+                <img
+                  src="{{ logo_url }}"
+                  alt="Adapte Finance"
+                  width="350"
+                  height="171"
+                  style="
+                    display: block;
+                    margin: 0 auto;
+                    max-width: 100%;
+                    aspect-ratio: 353/172;
+                    mix-blend-mode: multiply;
+                  "
+                />
+              </td>
+            </tr>
+
+            <!-- Badge -->
+            <tr>
+              <td align="center" style="padding: 22px 20px 0">
+                <span
+                  style="
+                    display: inline-block;
+                    background-color: #2f4215;
+                    border: 1px solid #91d636;
+                    border-radius: 37px;
+                    padding: 6px 18px;
+                    color: #91d636;
+                    font-size: 11px;
+                    font-weight: 700;
+                    letter-spacing: 0.06em;
+                  "
+                  >&#10003; CONTA CRIADA COM SUCESSO</span
+                >
+              </td>
+            </tr>
+
+            <!-- Saudação -->
+            <tr>
+              <td style="padding: 20px 52px 0">
+                <p
+                  style="
+                    margin: 0;
+                    color: #ffffff;
+                    font-size: 40px;
+
+                    font-weight: 400;
+                    line-height: normal;
+                  "
+                >
+                  Ol&#225;, {{ name }}!
+                </p>
+              </td>
+            </tr>
+
+            <!-- Texto de boas-vindas -->
+            <tr>
+              <td style="padding: 12px 52px 0">
+                <p
+                  style="
+                    margin: 0;
+                    color: #fff;
+                    font-family: Roboto, Arial, sans-serif;
+                    font-size: 14px;
+                    font-style: normal;
+                    font-weight: 200;
+                    line-height: normal;
+                  "
+                >
+                  Bem-vindo(a) ao
+                  <span style="color: #afff46; font-weight: 500"
+                    >Adapte Finance</span
+                  >
+                  &#8213; seu aplicativo de gerenciamento financeiro
+                  compartilhado.
+                </p>
+              </td>
+            </tr>
+
+            <!-- Caixa de funcionalidades -->
+            <tr>
+              <td style="padding: 16px 52px 0">
+                <table
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  style="
+                    background-color: #212121;
+                    border-radius: 10px;
+                    border: 1px solid #5a5a5a;
+                  "
+                >
+                  <tr>
+                    <td style="padding: 16px 18px">
+                      <p
+                        style="
+                          margin: 0 0 14px;
+                          color: #a9f841;
+                          font-size: 16px;
+                          font-weight: 700;
+                          letter-spacing: 0.08em;
+                          text-transform: uppercase;
+                        "
+                      >
+                        O QUE VOC&#202; PODE FAZER AGORA
+                      </p>
+
+                      <!-- Item 1 -->
+                      <table
+                        width="100%"
+                        cellpadding="0"
+                        cellspacing="0"
+                        style="margin-bottom: 10px"
+                      >
+                        <tr>
+                          <td width="28" valign="middle">
+                            <span
+                              style="
+                                display: inline-block;
+                                background-color: #2f4215;
+                                border-radius: 3px;
+                                width: 20px;
+                                height: 20px;
+                                text-align: center;
+                                line-height: 20px;
+                                font-size: 12px;
+                              "
+                              >&#128101;</span
+                            >
+                          </td>
+                          <td
+                            style="
+                              padding-left: 8px;
+                              color: #cccccc;
+                              font-size: 14px;
+                              font-weight: 300;
+                              line-height: normal;
+                            "
+                            valign="middle"
+                          >
+                            <strong style="color: #ffffff; font-weight: 500"
+                              >Criar grupos</strong
+                            >
+                            e convidar amigos e familiares
+                          </td>
+                        </tr>
+                      </table>
+
+                      <!-- Item 2 -->
+                      <table
+                        width="100%"
+                        cellpadding="0"
+                        cellspacing="0"
+                        style="margin-bottom: 10px"
+                      >
+                        <tr>
+                          <td width="28" valign="middle">
+                            <span
+                              style="
+                                display: inline-block;
+                                background-color: #2f4215;
+                                border-radius: 3px;
+                                width: 20px;
+                                height: 20px;
+                                text-align: center;
+                                line-height: 20px;
+                                font-size: 12px;
+                              "
+                              >&#128184;</span
+                            >
+                          </td>
+                          <td
+                            style="
+                              padding-left: 8px;
+                              color: #cccccc;
+                              font-size: 14px;
+                              font-weight: 300;
+                              line-height: 1.5;
+                            "
+                            valign="middle"
+                          >
+                            <strong style="color: #ffffff; font-weight: 500"
+                              >Registrar despesas</strong
+                            >
+                            compartilhadas em segundos
+                          </td>
+                        </tr>
+                      </table>
+
+                      <!-- Item 3 -->
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td width="28" valign="middle">
+                            <span
+                              style="
+                                display: inline-block;
+                                background-color: #2f4215;
+                                border-radius: 3px;
+                                width: 20px;
+                                height: 20px;
+                                text-align: center;
+                                line-height: 20px;
+                                font-size: 12px;
+                              "
+                              >&#128202;</span
+                            >
+                          </td>
+                          <td
+                            style="
+                              padding-left: 8px;
+                              color: #cccccc;
+                              font-size: 14px;
+                              font-weight: 300;
+                              line-height: 1.5;
+                            "
+                            valign="middle"
+                          >
+                            Acompanhar pend&#234;ncias e quitar d&#237;vidas com
+                            clareza
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Botão CTA -->
+            <tr>
+              <td align="center" style="padding: 16px 52px 0">
+                <a
+                  href="{{ app_url }}"
+                  style="
+                    display: inline-block;
+                    background-color: #afff46;
+                    color: #000000;
+                    font-family: Roboto, Arial, sans-serif;
+                    font-size: 16px;
+                    font-style: normal;
+                    font-weight: 500;
+                    text-decoration: none;
+                    border-radius: 18.5px;
+                    padding: 12px 28px;
+                    line-height: normal;
+                    letter-spacing: 0.02em;
+                  "
+                  >Comece agora &#10230;</a
+                >
+              </td>
+            </tr>
+
+            <!-- Link copiável -->
+            <tr>
+              <td align="center" style="padding: 12px 52px 0">
+                <p
+                  style="
+                    margin: 0;
+                    color: #adadad;
+                    font-family: Roboto, Arial, sans-serif;
+                    font-size: 12px;
+                    font-style: normal;
+                    font-weight: 200;
+                    line-height: normal;
+                  "
+                >
+                  Ou copie este link:
+                  <a
+                    href="{{ app_url }}"
+                    style="
+                      color: #1f55f8;
+                      font-family: Roboto, Arial, sans-serif;
+                      font-size: 12px;
+                      font-style: normal;
+                      font-weight: 200;
+                      line-height: normal;
+                      text-decoration: none;
+                    "
+                    >adapte.com</a
+                  >
+                </p>
+              </td>
+            </tr>
+
+            <!-- Divisor -->
+            <tr>
+              <td style="padding: 20px 20px 0">
+                <hr
+                  style="border: none; border-top: 1px solid #333333; margin: 0"
+                />
+              </td>
+            </tr>
+
+            <!-- Ajuda -->
+            <tr>
+              <td style="padding: 16px 52px 24px">
+                <p
+                  style="
+                    margin: 0 0 4px;
+                    color: #ffffff;
+                    font-size: 14px;
+                    font-weight: 500;
+                    line-height: normal;
+                  "
+                >
+                  Precisa de ajuda?
+                </p>
+                <p
+                  style="
+                    margin: 0;
+                    color: #ffffff;
+                    font-size: 12px;
+                    font-weight: 200;
+                    line-height: 1.6;
+                  "
+                >
+                  Nossa equipe responde em at&#233; 24h. Escreva para
+                  <a
+                    href="mailto:adapte@gmail.com"
+                    style="
+                      color: #a9f841;
+                      text-decoration: none;
+                      font-weight: 500;
+                    "
+                    >adapte@gmail.com</a
+                  >
+                </p>
+              </td>
+            </tr>
+          </table>
+
+          <!-- Rodapé -->
+          <table
+            width="550"
+            cellpadding="0"
+            cellspacing="0"
+            style="max-width: 550px; width: 100%"
+          >
+            <tr>
+              <td align="center" style="padding: 20px 38px 32px">
+                <p
+                  style="
+                    margin: 0 0 6px;
+                    color: #959595;
+                    font-size: 12px;
+                    font-weight: 400;
+                  "
+                >
+                  <a href="#" style="color: #959595; text-decoration: none"
+                    >Sobre</a
+                  >
+                  &nbsp;&#183;&nbsp;
+                  <a href="#" style="color: #959595; text-decoration: none"
+                    >Privacidade</a
+                  >
+                  &nbsp;&#183;&nbsp;
+                  <a href="#" style="color: #959595; text-decoration: none"
+                    >Termos</a
+                  >
+                </p>
+                <br />
+                <p
+                  style="
+                    margin: 0 0 4px;
+                    color: #959595;
+                    font-size: 12px;
+                    font-weight: 300;
+                  "
+                >
+                  &#169; 2026 Adapte Finance. Todos os direitos reservados
+                </p>
+                <br />
+                <p
+                  style="
+                    margin: 0;
+                    color: #959595;
+                    font-size: 12px;
+                    font-weight: 200;
+                  "
+                >
+                  Voc&#234; recebeu esse email porque criou uma conta na Adapte
+                  Finance
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
