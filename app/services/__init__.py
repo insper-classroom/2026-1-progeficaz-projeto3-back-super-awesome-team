@@ -3,6 +3,7 @@ from .group_services import create_group_service
 from .user_services import (
     create_user_service,
     update_user_service,
+    delete_user_service,
     verify_email_service,
 )
 from .bill_services import create_bill_service, mark_bill_as_paid_service
@@ -26,6 +27,7 @@ __all__ = [
     "create_group_service",
     "create_user_service",
     "update_user_service",
+    "delete_user_service",
     "create_bill_service",
     "mark_bill_as_paid_service",
     "confirm_debtor_payment_service",

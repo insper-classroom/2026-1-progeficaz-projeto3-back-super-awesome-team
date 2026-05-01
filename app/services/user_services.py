@@ -1,6 +1,6 @@
 from ..models import User
 from ..extensions import mongo
-from ..schemas import UserSchema, UpdateUserSchema
+from ..schemas import UserSchema, UpdateUserSchema, DeleteUserSchema
 from ..utils import send_email, send_welcome_email, get_user_by_email
 from bson import ObjectId
 import bcrypt
@@ -8,6 +8,7 @@ import gevent
 
 schema = UserSchema()
 update_schema = UpdateUserSchema()
+delete_schema = DeleteUserSchema()
 
 
 def _email_error_handler(greenlet):
@@ -85,6 +86,31 @@ def update_user_service(user_id, data):
     mongo["users"].update_one({"_id": oid}, {"$set": updated_fields})
 
     return {"message": "Usuário atualizado com sucesso"}, None
+    
+
+
+
+def delete_user_service(user_id, data):
+    erros = delete_schema.validate(data)
+    if erros:
+        return None, erros
+
+    try:
+        oid = ObjectId(user_id)
+    except Exception:
+        return None, {"error": "ID inválido"}
+
+    user = mongo["users"].find_one({"_id": oid})
+    if not user:
+        return None, {"error": "Usuário não encontrado"}
+
+    # valida senha
+    if not bcrypt.checkpw( data["password"].encode("utf-8"), user["password"].encode("utf-8") ):
+        return None, {"error": "Senha incorreta"}
+
+    mongo["users"].delete_one({"_id": oid})
+
+    return {"message": "Usuário deletado com sucesso"}, None
 
 
 def verify_email_service(token):
