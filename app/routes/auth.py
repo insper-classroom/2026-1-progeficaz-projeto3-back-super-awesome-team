@@ -5,6 +5,9 @@ from ..services import (
     verify_email_service,
     get_google_auth_url,
     google_callback_service,
+    request_password_reset_service,
+    verify_reset_code_service,
+    reset_password_service,
 )
 
 auth_bp = Blueprint("auth", __name__)
@@ -43,6 +46,33 @@ def google_callback():
     code = request.args.get("code")
     code_verifier = session.pop("code_verifier", None)
     result, error = google_callback_service(code, code_verifier)
+    if error:
+        return jsonify(error), 400
+    return jsonify(result), 200
+
+
+@auth_bp.route("/auth/forgot-password", methods=["POST"])
+def forgot_password():
+    data = request.get_json()
+    result, error = request_password_reset_service(data)
+    if error:
+        return jsonify(error), 400
+    return jsonify(result), 200
+
+
+@auth_bp.route("/auth/verify-reset-code", methods=["POST"])
+def verify_reset_code():
+    data = request.get_json()
+    result, error = verify_reset_code_service(data)
+    if error:
+        return jsonify(error), 400
+    return jsonify(result), 200
+
+
+@auth_bp.route("/auth/reset-password", methods=["POST"])
+def reset_password():
+    data = request.get_json()
+    result, error = reset_password_service(data)
     if error:
         return jsonify(error), 400
     return jsonify(result), 200
