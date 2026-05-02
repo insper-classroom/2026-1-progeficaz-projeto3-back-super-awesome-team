@@ -3,13 +3,28 @@ import gevent
 from ..extensions import mongo
 from ..models import User
 from ..schemas import LoginSchema
-from ..utils import generate_token, get_user_by_email, send_welcome_email
+from ..utils import (
+    generate_token,
+    get_user_by_email,
+    send_welcome_email,
+    send_reset_code_email,
+)
 import os
+import uuid
 from google_auth_oauthlib.flow import Flow
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
+import secrets
+from datetime import datetime, timezone, timedelta
+
 
 schema = LoginSchema()
+
+
+def _normalize_utc_datetime(value):
+    if value and value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value
 
 
 def login_service(data):
@@ -94,3 +109,77 @@ def google_callback_service(code, code_verifier=None):
         return {"token": token}, None
     except Exception as e:
         return None, {"error": str(e)}
+
+
+def request_password_reset_service(data):
+    email = data.get("email", "").strip()
+    if not email:
+        return {"message": "Se o e-mail existir, o código será enviado"}, None
+
+    user = get_user_by_email(email)
+    if user:  # não revela se o e-mail existe ou não na resposta
+        code = f"{secrets.randbelow(1000000):06d}"
+        expires = datetime.now(timezone.utc) + timedelta(minutes=10)
+        mongo["users"].update_one(
+            {"email": email},
+            {"$set": {"reset_code": code, "reset_code_expires": expires}},
+        )
+        gevent.spawn(send_reset_code_email, user["name"], email, code)
+
+    return {"message": "Se o e-mail existir, o código será enviado"}, None
+
+
+def verify_reset_code_service(data):
+    email = data.get("email", "").strip()
+    code = str(data.get("code", "")).strip()
+    if not email or not code:
+        return None, {"error": "E-mail e código são obrigatórios"}
+
+    user = get_user_by_email(email)
+    if not user:
+        return None, {"error": "Código inválido ou expirado"}
+
+    stored_code = user.get("reset_code")
+    expires = _normalize_utc_datetime(user.get("reset_code_expires"))
+    if not stored_code or stored_code != code:
+        return None, {"error": "Código inválido ou expirado"}
+    if not expires or datetime.now(timezone.utc) > expires:
+        return None, {"error": "Código expirado"}
+
+    reset_token = str(uuid.uuid4())
+    token_expires = datetime.now(timezone.utc) + timedelta(minutes=15)
+    mongo["users"].update_one(
+        {"email": email},
+        {
+            "$set": {"reset_token": reset_token, "reset_token_expires": token_expires},
+            "$unset": {"reset_code": "", "reset_code_expires": ""},
+        },
+    )
+    return {"reset_token": reset_token}, None
+
+
+def reset_password_service(data):
+    reset_token = data.get("reset_token", "").strip()
+    new_password = data.get("new_password", "").strip()
+    if not reset_token or not new_password:
+        return None, {"error": "reset_token e new_password são obrigatórios"}
+
+    user = mongo["users"].find_one({"reset_token": reset_token})
+    if not user:
+        return None, {"error": "Token inválido ou expirado"}
+
+    expires = _normalize_utc_datetime(user.get("reset_token_expires"))
+    if not expires or datetime.now(timezone.utc) > expires:
+        return None, {"error": "Token expirado"}
+
+    hashed = bcrypt.hashpw(new_password.encode("utf-8"), bcrypt.gensalt()).decode(
+        "utf-8"
+    )
+    mongo["users"].update_one(
+        {"reset_token": reset_token},
+        {
+            "$set": {"password": hashed},
+            "$unset": {"reset_token": "", "reset_token_expires": ""},
+        },
+    )
+    return {"message": "Senha alterada com sucesso"}, None
