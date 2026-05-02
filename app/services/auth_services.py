@@ -115,3 +115,32 @@ def request_password_reset_service(data):
         gevent.spawn(send_reset_code_email, user["name"], email, code)
 
     return {"message": "Se o e-mail existir, o código será enviado"}, None
+
+
+def verify_reset_code_service(data):
+    email = data.get("email", "").strip()
+    code = str(data.get("code", "")).strip()
+    if not email or not code:
+        return None, {"error": "E-mail e código são obrigatórios"}
+
+    user = get_user_by_email(email)
+    if not user:
+        return None, {"error": "Código inválido ou expirado"}
+
+    stored_code = user.get("reset_code")
+    expires = user.get("reset_code_expires")
+    if not stored_code or stored_code != code:
+        return None, {"error": "Código inválido ou expirado"}
+    if not expires or datetime.now(timezone.utc) > expires:
+        return None, {"error": "Código expirado"}
+
+    reset_token = str(uuid.uuid4())
+    token_expires = datetime.now(timezone.utc) + timedelta(minutes=15)
+    mongo["users"].update_one(
+        {"email": email},
+        {
+            "$set": {"reset_token": reset_token, "reset_token_expires": token_expires},
+            "$unset": {"reset_code": "", "reset_code_expires": ""},
+        },
+    )
+    return {"reset_token": reset_token}, None
