@@ -1,4 +1,11 @@
-from .auth_services import login_service, get_google_auth_url, google_callback_service
+from .auth_services import (
+    login_service,
+    get_google_auth_url,
+    google_callback_service,
+    request_password_reset_service,
+    verify_reset_code_service,
+    reset_password_service,
+)
 from .group_services import create_group_service
 from .user_services import (
     create_user_service,
@@ -43,4 +50,7 @@ __all__ = [
     "get_user_expenses_service",
     "update_expense_service",
     "delete_expense_service",
+    "request_password_reset_service",
+    "verify_reset_code_service",
+    "reset_password_service",
 ]
