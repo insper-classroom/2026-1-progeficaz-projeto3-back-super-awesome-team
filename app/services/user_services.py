@@ -85,9 +85,7 @@ def update_user_service(user_id, data):
 
     mongo["users"].update_one({"_id": oid}, {"$set": updated_fields})
 
-    return {"message": "Usuário atualizado com sucesso"}, None
-    
-
+    return {"message1": "Usuário atualizado com sucesso"}, None
 
 
 def delete_user_service(user_id, data):
@@ -105,7 +103,9 @@ def delete_user_service(user_id, data):
         return None, {"error": "Usuário não encontrado"}
 
     # valida senha
-    if not bcrypt.checkpw( data["password"].encode("utf-8"), user["password"].encode("utf-8") ):
+    if not bcrypt.checkpw(
+        data["password"].encode("utf-8"), user["password"].encode("utf-8")
+    ):
         return None, {"error": "Senha incorreta"}
 
     mongo["users"].delete_one({"_id": oid})

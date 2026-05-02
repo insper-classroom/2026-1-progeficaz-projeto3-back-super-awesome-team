@@ -8,6 +8,9 @@ import os
 from google_auth_oauthlib.flow import Flow
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
+import secrets
+from datetime import datetime, timezone, timedelta
+
 
 schema = LoginSchema()
 
@@ -94,3 +97,21 @@ def google_callback_service(code, code_verifier=None):
         return {"token": token}, None
     except Exception as e:
         return None, {"error": str(e)}
+
+
+def request_password_reset_service(data):
+    email = data.get("email", "").strip()
+    if not email:
+        return {"message": "Se o e-mail existir, o código será enviado"}, None
+
+    user = get_user_by_email(email)
+    if user:  # não revela se o e-mail existe ou não na resposta
+        code = f"{secrets.randbelow(1000000):06d}"
+        expires = datetime.now(timezone.utc) + timedelta(minutes=10)
+        mongo["users"].update_one(
+            {"email": email},
+            {"$set": {"reset_code": code, "reset_code_expires": expires}},
+        )
+        gevent.spawn(send_reset_code_email, user["name"], email, code)
+
+    return {"message": "Se o e-mail existir, o código será enviado"}, None
