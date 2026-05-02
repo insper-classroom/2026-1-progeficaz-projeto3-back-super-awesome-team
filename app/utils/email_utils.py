@@ -24,6 +24,12 @@ with open(os.path.join(_TEMPLATES_DIR, "adapte_logo.png"), "rb") as _f:
 with open(os.path.join(_TEMPLATES_DIR, "white_short_logo.png"), "rb") as _f:
     _LOGO_WHITE_URL = "data:image/png;base64," + base64.b64encode(_f.read()).decode()
 
+with open(os.path.join(_TEMPLATES_DIR, "black_short_logo.png"), "rb") as _f:
+    _LOGO_BLACK_URL = "data:image/png;base64," + base64.b64encode(_f.read()).decode()
+
+with open(os.path.join(_TEMPLATES_DIR, "confirm_icon.png"), "rb") as _f:
+    _CONFIRM_ICON_URL = "data:image/png;base64," + base64.b64encode(_f.read()).decode()
+
 
 def send_welcome_email(name, to_email):
     subject = "Bem-vindo ao Adapte Finance!"
@@ -56,9 +62,20 @@ def send_email(subject, body, to_email):
     return service.users().messages().send(userId="me", body={"raw": raw}).execute()
 
 
+def send_confirm_email(name, to_email, confirm_url):
+    subject = "Confirme seu email – Adapte Finance"
+    body = _jinja_env.get_template("confirmemail.html").render(
+        name=name,
+        confirm_url=confirm_url,
+        logo_url=_LOGO_URL,
+        confirm_icon_url=_CONFIRM_ICON_URL,
+    )
+    return send_email(subject, body, to_email)
+
+
 def send_reset_code_email(name, to_email, code):
     subject = "Seu código de recuperação de senha – Adapte Finance"
     body = _jinja_env.get_template("resetcodeemail.html").render(
-        name=name, code=code, logo_url=_LOGO_WHITE_URL
+        name=name, code=code, logo_url=_LOGO_BLACK_URL
     )
     return send_email(subject, body, to_email)
