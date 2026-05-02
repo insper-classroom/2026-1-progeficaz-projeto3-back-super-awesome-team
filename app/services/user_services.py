@@ -1,7 +1,8 @@
+import os
 from ..models import User
 from ..extensions import mongo
 from ..schemas import UserSchema, UpdateUserSchema, DeleteUserSchema
-from ..utils import send_email, send_welcome_email, get_user_by_email
+from ..utils import send_email, send_welcome_email, send_confirm_email, get_user_by_email
 from bson import ObjectId
 import bcrypt
 import gevent
@@ -31,16 +32,11 @@ def create_user_service(data):
     mongo["users"].insert_one(user.to_dictionary())
 
     token = user.verification_token
-    subject = "Confirme seu e-mail"
-    body = (
-        f"Olá {data['name']},\n\n"
-        f"Clique no link abaixo para confirmar sua conta:\n\n"
-        f"http://localhost:5000/auth/verify-email/{token}\n\n"
-        f"Se não foi você, ignore este e-mail."
-    )
-    gevent.spawn(send_email, subject, body, data["email"]).link_exception(
-        _email_error_handler
-    )
+    base_url = os.getenv("BASE_URL", "http://localhost:5000")
+    confirm_url = f"{base_url}/auth/verify-email/{token}"
+    gevent.spawn(
+        send_confirm_email, data["name"], data["email"], confirm_url
+    ).link_exception(_email_error_handler)
 
     return {"message": "OK ✅"}, None
 
