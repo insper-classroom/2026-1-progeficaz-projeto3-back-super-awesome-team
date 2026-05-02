@@ -51,3 +51,11 @@ def send_email(subject, body, to_email):
     raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
 
     return service.users().messages().send(userId="me", body={"raw": raw}).execute()
+
+
+def send_reset_code_email(name, to_email, code):
+    subject = "Seu código de recuperação de senha – Adapte Finance"
+    body = _jinja_env.get_template("resetcodeemail.html").render(
+        name=name, code=code, logo_url=_LOGO_URL
+    )
+    return send_email(subject, body, to_email)
