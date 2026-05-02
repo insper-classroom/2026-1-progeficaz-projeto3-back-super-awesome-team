@@ -144,3 +144,30 @@ def verify_reset_code_service(data):
         },
     )
     return {"reset_token": reset_token}, None
+
+
+def reset_password_service(data):
+    reset_token = data.get("reset_token", "").strip()
+    new_password = data.get("new_password", "").strip()
+    if not reset_token or not new_password:
+        return None, {"error": "reset_token e new_password são obrigatórios"}
+
+    user = mongo["users"].find_one({"reset_token": reset_token})
+    if not user:
+        return None, {"error": "Token inválido ou expirado"}
+
+    expires = user.get("reset_token_expires")
+    if not expires or datetime.now(timezone.utc) > expires:
+        return None, {"error": "Token expirado"}
+
+    hashed = bcrypt.hashpw(new_password.encode("utf-8"), bcrypt.gensalt()).decode(
+        "utf-8"
+    )
+    mongo["users"].update_one(
+        {"reset_token": reset_token},
+        {
+            "$set": {"password": hashed},
+            "$unset": {"reset_token": "", "reset_token_expires": ""},
+        },
+    )
+    return {"message": "Senha alterada com sucesso"}, None
