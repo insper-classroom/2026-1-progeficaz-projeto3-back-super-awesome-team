@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Seu código de recuperação de senha – Adapte Finance</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@100;200;300;400;500;600;700&display=swap");
+    </style>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background-color: #000000;
+      font-family: Roboto, Arial, sans-serif;
+    "
+  >
+    <table
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      style="background-color: #000000; padding: 40px 0"
+    >
+      <tr>
+        <td align="center">
+          <table
+            width="550"
+            cellpadding="0"
+            cellspacing="0"
+            style="
+              background-color: #1a1a1a;
+              border-radius: 15px;
+              overflow: hidden;
+              max-width: 550px;
+              width: 100%;
+            "
+          >
+            <!-- Logo -->
+            <tr>
+              <td style="padding: 28px 38px 0">
+                <img
+                  src="{{ logo_url }}"
+                  alt="Adapte Finance"
+                  width="42"
+                  height="42"
+                  style="display: block"
+                />
+              </td>
+            </tr>
+
+            <!-- Divisor -->
+            <tr>
+              <td style="padding: 14px 0 0">
+                <hr
+                  style="border: none; border-top: 1px solid #333333; margin: 0"
+                />
+              </td>
+            </tr>
+
+            <!-- Saudação -->
+            <tr>
+              <td style="padding: 18px 38px 0">
+                <p
+                  style="
+                    margin: 0;
+                    color: #ffffff;
+                    font-size: 18px;
+                    font-weight: 200;
+                    line-height: normal;
+                  "
+                >
+                  Ol&#225;,
+                  <strong style="font-weight: 600">{{ name }}</strong>,
+                </p>
+                <p
+                  style="
+                    margin: 6px 0 0;
+                    color: #ffffff;
+                    font-size: 18px;
+                    font-weight: 200;
+                    line-height: normal;
+                  "
+                >
+                  Use o c&#243;digo abaixo para fazer login na sua conta da
+                  <span style="color: #afff46; font-weight: 500">Adapte</span>
+                </p>
+              </td>
+            </tr>
+
+            <!-- Caixa do código -->
+            <tr>
+              <td align="center" style="padding: 24px 38px 0">
+                <table
+                  cellpadding="0"
+                  cellspacing="0"
+                  style="
+                    background-color: #212121;
+                    border: 1px solid #ffffff;
+                    border-radius: 10px;
+                    width: 340px;
+                  "
+                >
+                  <tr>
+                    <td align="center" style="padding: 11px 20px">
+                      <p
+                        style="
+                          margin: 0;
+                          color: #ffffff;
+                          font-size: 40px;
+                          font-weight: 200;
+                          line-height: normal;
+                          letter-spacing: 0.25em;
+                          text-align: center;
+                        "
+                      >
+                        {{ code }}
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Expiração -->
+            <tr>
+              <td style="padding: 16px 38px 28px">
+                <p
+                  style="
+                    margin: 0;
+                    color: #ffffff;
+                    font-size: 18px;
+                    font-weight: 200;
+                    line-height: normal;
+                  "
+                >
+                  Esse c&#243;digo expira em 10 minutos.
+                </p>
+              </td>
+            </tr>
+
+            <!-- Barra verde gradiente -->
+            <tr>
+              <td
+                style="
+                  height: 54px;
+                  background: linear-gradient(
+                    90deg,
+                    #4c701c 0%,
+                    #afff46 50%,
+                    #4c701c 100%
+                  );
+                  border-radius: 0 0 15px 15px;
+                "
+              ></td>
+            </tr>
+          </table>
+
+          <!-- Rodapé -->
+          <table
+            width="550"
+            cellpadding="0"
+            cellspacing="0"
+            style="max-width: 550px; width: 100%"
+          >
+            <tr>
+              <td align="center" style="padding: 20px 38px 32px">
+                <p
+                  style="
+                    margin: 0 0 6px;
+                    color: #959595;
+                    font-size: 12px;
+                    font-weight: 400;
+                  "
+                >
+                  <a href="#" style="color: #959595; text-decoration: none"
+                    >Sobre</a
+                  >
+                  &nbsp;&#183;&nbsp;
+                  <a href="#" style="color: #959595; text-decoration: none"
+                    >Privacidade</a
+                  >
+                  &nbsp;&#183;&nbsp;
+                  <a href="#" style="color: #959595; text-decoration: none"
+                    >Termos</a
+                  >
+                </p>
+                <br />
+                <p
+                  style="
+                    margin: 0 0 4px;
+                    color: #959595;
+                    font-size: 12px;
+                    font-weight: 300;
+                  "
+                >
+                  &#169; 2026 Adapte Finance. Todos os direitos reservados
+                </p>
+                <br />
+                <p
+                  style="
+                    margin: 0;
+                    color: #959595;
+                    font-size: 12px;
+                    font-weight: 200;
+                  "
+                >
+                  Voc&#234; recebeu esse email porque criou uma conta na Adapte
+                  Finance
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

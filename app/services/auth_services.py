@@ -3,8 +3,14 @@ import gevent
 from ..extensions import mongo
 from ..models import User
 from ..schemas import LoginSchema
-from ..utils import generate_token, get_user_by_email, send_welcome_email
+from ..utils import (
+    generate_token,
+    get_user_by_email,
+    send_welcome_email,
+    send_reset_code_email,
+)
 import os
+import uuid
 from google_auth_oauthlib.flow import Flow
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
@@ -13,6 +19,12 @@ from datetime import datetime, timezone, timedelta
 
 
 schema = LoginSchema()
+
+
+def _normalize_utc_datetime(value):
+    if value and value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value
 
 
 def login_service(data):
@@ -128,7 +140,7 @@ def verify_reset_code_service(data):
         return None, {"error": "Código inválido ou expirado"}
 
     stored_code = user.get("reset_code")
-    expires = user.get("reset_code_expires")
+    expires = _normalize_utc_datetime(user.get("reset_code_expires"))
     if not stored_code or stored_code != code:
         return None, {"error": "Código inválido ou expirado"}
     if not expires or datetime.now(timezone.utc) > expires:
@@ -156,7 +168,7 @@ def reset_password_service(data):
     if not user:
         return None, {"error": "Token inválido ou expirado"}
 
-    expires = user.get("reset_token_expires")
+    expires = _normalize_utc_datetime(user.get("reset_token_expires"))
     if not expires or datetime.now(timezone.utc) > expires:
         return None, {"error": "Token expirado"}
 
