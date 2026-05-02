@@ -85,9 +85,6 @@ def update_user_service(user_id, data):
 
 
 def delete_user_service(user_id, data):
-    erros = delete_schema.validate(data)
-    if erros:
-        return None, erros
 
     try:
         oid = ObjectId(user_id)
@@ -97,6 +94,15 @@ def delete_user_service(user_id, data):
     user = mongo["users"].find_one({"_id": oid})
     if not user:
         return None, {"error": "Usuário não encontrado"}
+    
+    if user.get("auth_provider") == "google":
+        mongo["users"].delete_one({"_id": oid})
+        return {"message": "Usuário deletado com sucesso"}, None
+    
+    
+    erros = delete_schema.validate(data)
+    if erros:
+        return None, erros
 
     # valida senha
     if not bcrypt.checkpw(
