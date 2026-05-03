@@ -5,6 +5,7 @@ from ..services import (
     get_user_pendencies_service,
     get_bill_pendencies_service,
     get_pendency_service,
+    get_group_pendencies_service,
 )
 from ..utils import jwt_required
 
@@ -36,6 +37,17 @@ def get_bill_pendencies(bill_id):
     result, error = get_bill_pendencies_service(bill_id)
     if error:
         return jsonify(error), 400
+    return jsonify({"pendencies": result}), 200
+
+
+@pendency_bp.route("/group/<group_id>/pendencies", methods=["GET"])
+@jwt_required
+def get_group_pendencies(group_id):
+    user_email = request.current_user
+    result, error = get_group_pendencies_service(group_id, user_email)
+    if error:
+        status_code = 404 if "não encontrado" in error.get("error", "") else 403
+        return jsonify(error), status_code
     return jsonify({"pendencies": result}), 200
 
 
