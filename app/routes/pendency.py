@@ -25,18 +25,26 @@ def get_user_pendencies():
 @pendency_bp.route("/pendencies/<pendency_id>", methods=["GET"])
 @jwt_required
 def get_pendency(pendency_id):
-    result, error = get_pendency_service(pendency_id)
+    user_email = request.current_user
+    result, error = get_pendency_service(pendency_id, user_email)
     if error:
-        return jsonify(error), 404
+        err = error.get("error", "")
+        if "não encontrad" in err:
+            return jsonify(error), 404
+        return jsonify(error), 403
     return jsonify(result), 200
 
 
 @pendency_bp.route("/bill/<bill_id>/pendencies", methods=["GET"])
 @jwt_required
 def get_bill_pendencies(bill_id):
-    result, error = get_bill_pendencies_service(bill_id)
+    user_email = request.current_user
+    result, error = get_bill_pendencies_service(bill_id, user_email)
     if error:
-        return jsonify(error), 400
+        err = error.get("error", "")
+        if "não encontrad" in err:
+            return jsonify(error), 404
+        return jsonify(error), 403
     return jsonify({"pendencies": result}), 200
 
 

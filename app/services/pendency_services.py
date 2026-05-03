@@ -107,8 +107,16 @@ def get_user_pendencies_service(user_email):
         return None, {"error": str(e)}
 
 
-def get_bill_pendencies_service(bill_id):
+def get_bill_pendencies_service(bill_id, user_email):
     try:
+        bill = mongo["bills"].find_one({"_id": ObjectId(bill_id)})
+        if not bill:
+            return None, {"error": "Conta não encontrada"}
+
+        group = mongo["groups"].find_one({"_id": ObjectId(bill["group_id"])})
+        if not group or user_email not in group["members"]:
+            return None, {"error": "Você não tem permissão para acessar esta conta"}
+
         pendencies = list(mongo["pendencies"].find({"bill_id": bill_id}))
 
         # Convert ObjectId to string for JSON serialization
@@ -121,12 +129,20 @@ def get_bill_pendencies_service(bill_id):
         return None, {"error": str(e)}
 
 
-def get_pendency_service(pendency_id):
+def get_pendency_service(pendency_id, user_email):
     try:
         pendency = mongo["pendencies"].find_one({"_id": ObjectId(pendency_id)})
 
         if not pendency:
             return None, {"error": "Pendência não encontrada"}
+
+        bill = mongo["bills"].find_one({"_id": ObjectId(pendency["bill_id"])})
+        if not bill:
+            return None, {"error": "Conta não encontrada"}
+
+        group = mongo["groups"].find_one({"_id": ObjectId(bill["group_id"])})
+        if not group or user_email not in group["members"]:
+            return None, {"error": "Você não tem permissão para acessar esta conta"}
 
         pendency["_id"] = str(pendency["_id"])
         pendency["bill_id"] = str(pendency["bill_id"])
