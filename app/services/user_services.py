@@ -2,7 +2,6 @@ from ..models import User
 from ..extensions import mongo
 from ..schemas import UserSchema, UpdateUserSchema, DeleteUserSchema
 from ..utils import send_email, send_welcome_email, get_user_by_email
-from bson import ObjectId
 import bcrypt
 import gevent
 
@@ -45,19 +44,36 @@ def create_user_service(data):
     return {"message": "OK ✅"}, None
 
 
-def update_user_service(user_id, data):
+def get_current_user_service(user_email):
+    user = get_user_by_email(user_email)
+    if not user:
+        return None, {"error": "Usuário não encontrado"}
+    doc = dict(user)
+    doc["_id"] = str(doc["_id"])
+    for key in (
+        "password",
+        "senha",
+        "verification_token",
+        "reset_code",
+        "reset_code_expires",
+        "reset_token",
+        "reset_token_expires",
+    ):
+        doc.pop(key, None)
+    return doc, None
+
+
+def update_user_service(user_email, data):
     erros = update_schema.validate(data)
     if erros:
         return None, erros
-    try:
-        oid = ObjectId(user_id)
-    except Exception:
-        return None, {"error": "ID inválido"}
 
-    user = mongo["users"].find_one({"_id": oid})
+    user = mongo["users"].find_one({"email": user_email})
 
     if not user:
         return None, {"error": "Usuário não encontrado"}
+
+    oid = user["_id"]
 
     updated_fields = {}
 
@@ -85,30 +101,54 @@ def update_user_service(user_id, data):
 
     mongo["users"].update_one({"_id": oid}, {"$set": updated_fields})
 
-    return {"message1": "Usuário atualizado com sucesso"}, None
+    return {"message": "Usuário atualizado com sucesso"}, None
 
 
-def delete_user_service(user_id, data):
-    erros = delete_schema.validate(data)
+def delete_user_service(user_email, data):
+    erros = delete_schema.validate(data or {})
     if erros:
         return None, erros
 
-    try:
-        oid = ObjectId(user_id)
-    except Exception:
-        return None, {"error": "ID inválido"}
-
-    user = mongo["users"].find_one({"_id": oid})
+    user = mongo["users"].find_one({"email": user_email})
     if not user:
         return None, {"error": "Usuário não encontrado"}
 
-    # valida senha
-    if not bcrypt.checkpw(
-        data["password"].encode("utf-8"), user["password"].encode("utf-8")
-    ):
-        return None, {"error": "Senha incorreta"}
+    stored_password = user.get("password")
+    if stored_password:
+        supplied = (data or {}).get("password")
+        if not supplied:
+            return None, {"error": "Senha é obrigatória"}
+        if not bcrypt.checkpw(
+            supplied.encode("utf-8"), stored_password.encode("utf-8")
+        ):
+            return None, {"error": "Senha incorreta"}
 
-    mongo["users"].delete_one({"_id": oid})
+    if mongo["groups"].count_documents({"created_by": user_email}) > 0:
+        return None, {
+            "error": "Não é possível excluir a conta: você criou grupos. Exclua ou transfira esses grupos antes."
+        }
+
+    open_bill_query = {
+        "is_paid": {"$ne": True},
+        "$or": [
+            {"created_by": user_email},
+            {"members_to_pay": {"$elemMatch": {"email": user_email}}},
+        ],
+    }
+    if mongo["bills"].count_documents(open_bill_query) > 0:
+        return None, {
+            "error": "Não é possível excluir a conta: há contas em aberto das quais você participa."
+        }
+
+    mongo["expenses"].delete_many({"user_email": user_email})
+    mongo["pendencies"].delete_many(
+        {"$or": [{"debtor_email": user_email}, {"creditor_email": user_email}]}
+    )
+    mongo["groups"].update_many(
+        {"members": user_email}, {"$pull": {"members": user_email}}
+    )
+
+    mongo["users"].delete_one({"_id": user["_id"]})
 
     return {"message": "Usuário deletado com sucesso"}, None
 

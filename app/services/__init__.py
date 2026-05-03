@@ -17,6 +17,7 @@ from .user_services import (
     create_user_service,
     update_user_service,
     delete_user_service,
+    get_current_user_service,
     verify_email_service,
 )
 from .bill_services import (
@@ -54,6 +55,7 @@ __all__ = [
     "create_user_service",
     "update_user_service",
     "delete_user_service",
+    "get_current_user_service",
     "create_bill_service",
     "get_user_bills_service",
     "get_group_bills_service",
