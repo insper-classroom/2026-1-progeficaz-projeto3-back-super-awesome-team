@@ -28,6 +28,8 @@ def login():
 def verify_email(token):
     result, error = verify_email_service(token)
     if error:
+        if error.get("error") == "Token inválido ou expirado":
+            return jsonify(error), 404
         return jsonify(error), 400
     return jsonify(result), 200
 

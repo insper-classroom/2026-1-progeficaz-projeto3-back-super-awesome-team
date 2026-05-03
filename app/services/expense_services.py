@@ -33,11 +33,14 @@ def create_expense_service(data, user_email):
         return None, {"error": str(e)}
 
 
-def get_expense_service(expense_id):
+def get_expense_service(expense_id, user_email):
     try:
         expense = mongo["expenses"].find_one({"_id": ObjectId(expense_id)})
         if not expense:
             return None, {"error": "Despesa não encontrada"}
+
+        if expense["user_email"] != user_email:
+            return None, {"error": "Você não tem permissão para acessar esta despesa"}
 
         expense["_id"] = str(expense["_id"])
         return expense, None

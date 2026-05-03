@@ -1,8 +1,11 @@
 from flask import Blueprint, request, jsonify
-from ..extensions import mongo
-from ..models import User
-from ..services import create_user_service, update_user_service, delete_user_service
-from ..utils import jwt_required
+from ..services import (
+    create_user_service,
+    update_user_service,
+    delete_user_service,
+    get_current_user_service,
+)
+from ..utils import jwt_required, http_status_for_service_error
 
 user_bp = Blueprint("user", __name__)
 
@@ -12,31 +15,28 @@ def create_user():
     data = request.get_json()
     result, error = create_user_service(data)
     if error:
-        return jsonify(error), 400
+        return jsonify(error), http_status_for_service_error(error)
     return jsonify(result), 201
 
 
-@user_bp.route("/user", methods=["GET"])
+@user_bp.route("/user/me", methods=["GET"])
 @jwt_required
-def get_users():
-    users = list(mongo["users"].find())
-    for user in users:
-        user["_id"] = str(user["_id"])
-        user.pop("password", None)
-        user.pop("senha", None)
-    return jsonify(users), 200
+def get_current_user():
+    user, error = get_current_user_service(request.current_user)
+    if error:
+        return jsonify(error), http_status_for_service_error(error)
+    return jsonify(user), 200
 
 
 @user_bp.route("/user", methods=["PUT"])
 @jwt_required
 def update_users():
-    data = request.get_json()
-    email = request.current_user
+    data = request.get_json() or {}
 
-    resultado, error = update_user_service(email, data)
+    resultado, error = update_user_service(request.current_user, data)
 
     if error:
-        return jsonify(error), 400
+        return jsonify(error), http_status_for_service_error(error)
 
     return jsonify(resultado), 200
 
@@ -44,12 +44,11 @@ def update_users():
 @user_bp.route("/user", methods=["DELETE"])
 @jwt_required
 def delete_user():
-    data = request.get_json(silent=True) or {}
-    email = request.current_user
+    data = request.get_json() or {}
 
-    result, error = delete_user_service(email, data)
+    result, error = delete_user_service(request.current_user, data)
 
     if error:
-        return jsonify(error), 400
+        return jsonify(error), http_status_for_service_error(error)
 
     return jsonify(result), 200

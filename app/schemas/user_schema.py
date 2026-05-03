@@ -21,4 +21,8 @@ class UpdateUserSchema(Schema):
     current_password = fields.Str(required=False)
 
 class DeleteUserSchema(Schema):
-    password = fields.Str(required=True)
+    password = fields.Str(
+        required=False,
+        allow_none=True,
+        load_default=None,
+    )

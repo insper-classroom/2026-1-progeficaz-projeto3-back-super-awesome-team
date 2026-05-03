@@ -41,14 +41,37 @@ def create_user_service(data):
     return {"message": "OK ✅"}, None
 
 
-def update_user_service(email, data):
+def get_current_user_service(user_email):
+    user = get_user_by_email(user_email)
+    if not user:
+        return None, {"error": "Usuário não encontrado"}
+    doc = dict(user)
+    doc["_id"] = str(doc["_id"])
+    for key in (
+        "password",
+        "senha",
+        "verification_token",
+        "reset_code",
+        "reset_code_expires",
+        "reset_token",
+        "reset_token_expires",
+    ):
+        doc.pop(key, None)
+    return doc, None
+
+
+def update_user_service(user_email, data):
     erros = update_schema.validate(data)
     if erros:
         return None, erros
 
+    user = mongo["users"].find_one({"email": user_email})
+
     user = mongo["users"].find_one({"email": email})
     if not user:
         return None, {"error": "Usuário não encontrado"}
+
+    oid = user["_id"]
 
     updated_fields = {}
 
@@ -80,10 +103,12 @@ def update_user_service(email, data):
     return {"message": "Usuário atualizado com sucesso"}, None
 
 
-def delete_user_service(email, data):
+def delete_user_service(user_email, data):
+    erros = delete_schema.validate(data or {})
+    if erros:
+        return None, erros
 
-    user = mongo["users"].find_one({"email": email})
-
+    user = mongo["users"].find_one({"email": user_email})
     if not user:
         return None, {"error": "Usuário não encontrado"}
     
@@ -96,11 +121,40 @@ def delete_user_service(email, data):
     if erros:
         return None, erros
 
-    # valida senha
-    if not bcrypt.checkpw(
-        data["password"].encode("utf-8"), user["password"].encode("utf-8")
-    ):
-        return None, {"error": "Senha incorreta"}
+    stored_password = user.get("password")
+    if stored_password:
+        supplied = (data or {}).get("password")
+        if not supplied:
+            return None, {"error": "Senha é obrigatória"}
+        if not bcrypt.checkpw(
+            supplied.encode("utf-8"), stored_password.encode("utf-8")
+        ):
+            return None, {"error": "Senha incorreta"}
+
+    if mongo["groups"].count_documents({"created_by": user_email}) > 0:
+        return None, {
+            "error": "Não é possível excluir a conta: você criou grupos. Exclua ou transfira esses grupos antes."
+        }
+
+    open_bill_query = {
+        "is_paid": {"$ne": True},
+        "$or": [
+            {"created_by": user_email},
+            {"members_to_pay": {"$elemMatch": {"email": user_email}}},
+        ],
+    }
+    if mongo["bills"].count_documents(open_bill_query) > 0:
+        return None, {
+            "error": "Não é possível excluir a conta: há contas em aberto das quais você participa."
+        }
+
+    mongo["expenses"].delete_many({"user_email": user_email})
+    mongo["pendencies"].delete_many(
+        {"$or": [{"debtor_email": user_email}, {"creditor_email": user_email}]}
+    )
+    mongo["groups"].update_many(
+        {"members": user_email}, {"$pull": {"members": user_email}}
+    )
 
     mongo["users"].delete_one({"_id": user["_id"]})
 

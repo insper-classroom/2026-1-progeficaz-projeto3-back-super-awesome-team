@@ -28,7 +28,9 @@ class Pendency:
         self.value = value
         self.debtor_confirmed = debtor_confirmed
         self.creditor_confirmed = creditor_confirmed
+        self.is_resolved = False
         self.created_at = datetime.utcnow()
+        self.resolved_at = None
 
     def to_dictionary(self):
         return {
@@ -38,5 +40,7 @@ class Pendency:
             "value": self.value,
             "debtor_confirmed": self.debtor_confirmed,
             "creditor_confirmed": self.creditor_confirmed,
+            "is_resolved": self.is_resolved,
             "created_at": self.created_at,
+            "resolved_at": self.resolved_at,
         }

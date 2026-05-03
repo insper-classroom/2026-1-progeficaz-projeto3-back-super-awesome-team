@@ -2,6 +2,7 @@ from ..models import Pendency
 from ..extensions import mongo
 from ..schemas import PendencySchema
 from bson.objectid import ObjectId
+from datetime import datetime
 
 schema = PendencySchema()
 
@@ -42,8 +43,15 @@ def confirm_debtor_payment_service(pendency_id, user_email):
         if pendency["debtor_email"] != user_email:
             return None, {"error": "Apenas o devedor pode confirmar o pagamento"}
 
+        update_data = {"debtor_confirmed": True}
+
+        # Se o credor já confirmou, marcar como resolvida
+        if pendency["creditor_confirmed"]:
+            update_data["is_resolved"] = True
+            update_data["resolved_at"] = datetime.utcnow()
+
         mongo["pendencies"].update_one(
-            {"_id": ObjectId(pendency_id)}, {"$set": {"debtor_confirmed": True}}
+            {"_id": ObjectId(pendency_id)}, {"$set": update_data}
         )
 
         return {"message": "Confirmação do devedor registrada"}, None
@@ -61,8 +69,15 @@ def confirm_creditor_payment_service(pendency_id, user_email):
         if pendency["creditor_email"] != user_email:
             return None, {"error": "Apenas o credor pode confirmar o recebimento"}
 
+        update_data = {"creditor_confirmed": True}
+
+        # Se o devedor já confirmou, marcar como resolvida
+        if pendency["debtor_confirmed"]:
+            update_data["is_resolved"] = True
+            update_data["resolved_at"] = datetime.utcnow()
+
         mongo["pendencies"].update_one(
-            {"_id": ObjectId(pendency_id)}, {"$set": {"creditor_confirmed": True}}
+            {"_id": ObjectId(pendency_id)}, {"$set": update_data}
         )
 
         return {"message": "Confirmação do credor registrada"}, None
@@ -92,8 +107,16 @@ def get_user_pendencies_service(user_email):
         return None, {"error": str(e)}
 
 
-def get_bill_pendencies_service(bill_id):
+def get_bill_pendencies_service(bill_id, user_email):
     try:
+        bill = mongo["bills"].find_one({"_id": ObjectId(bill_id)})
+        if not bill:
+            return None, {"error": "Conta não encontrada"}
+
+        group = mongo["groups"].find_one({"_id": ObjectId(bill["group_id"])})
+        if not group or user_email not in group["members"]:
+            return None, {"error": "Você não tem permissão para acessar esta conta"}
+
         pendencies = list(mongo["pendencies"].find({"bill_id": bill_id}))
 
         # Convert ObjectId to string for JSON serialization
@@ -106,16 +129,51 @@ def get_bill_pendencies_service(bill_id):
         return None, {"error": str(e)}
 
 
-def get_pendency_service(pendency_id):
+def get_pendency_service(pendency_id, user_email):
     try:
         pendency = mongo["pendencies"].find_one({"_id": ObjectId(pendency_id)})
 
         if not pendency:
             return None, {"error": "Pendência não encontrada"}
 
+        bill = mongo["bills"].find_one({"_id": ObjectId(pendency["bill_id"])})
+        if not bill:
+            return None, {"error": "Conta não encontrada"}
+
+        group = mongo["groups"].find_one({"_id": ObjectId(bill["group_id"])})
+        if not group or user_email not in group["members"]:
+            return None, {"error": "Você não tem permissão para acessar esta conta"}
+
         pendency["_id"] = str(pendency["_id"])
         pendency["bill_id"] = str(pendency["bill_id"])
 
         return pendency, None
+    except Exception as e:
+        return None, {"error": str(e)}
+
+
+def get_group_pendencies_service(group_id, user_email):
+    try:
+        # Valida se o grupo existe
+        group = mongo["groups"].find_one({"_id": ObjectId(group_id)})
+        if not group:
+            return None, {"error": "Grupo não encontrado"}
+
+        # Valida se o usuário é membro do grupo
+        if user_email not in group["members"]:
+            return None, {"error": "Você não é membro deste grupo"}
+
+        # Pega todas as bills do grupo
+        bills = list(mongo["bills"].find({"group_id": group_id}, {"_id": 1}))
+        bill_ids = [str(bill["_id"]) for bill in bills]
+
+        # Pega todas as pendências dessas bills
+        pendencies = list(mongo["pendencies"].find({"bill_id": {"$in": bill_ids}}))
+
+        for p in pendencies:
+            p["_id"] = str(p["_id"])
+            p["bill_id"] = str(p["bill_id"])
+
+        return pendencies, None
     except Exception as e:
         return None, {"error": str(e)}
