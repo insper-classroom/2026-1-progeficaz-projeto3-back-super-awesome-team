@@ -31,12 +31,9 @@ def get_users():
 @jwt_required
 def update_users():
     data = request.get_json()
-    user_id = data.pop("user_id", None)
+    email = request.current_user
 
-    if not user_id:
-        return jsonify({"error": "user_id é obrigatório"}), 400
-
-    resultado, error = update_user_service(user_id, data)
+    resultado, error = update_user_service(email, data)
 
     if error:
         return jsonify(error), 400
@@ -47,13 +44,10 @@ def update_users():
 @user_bp.route("/user", methods=["DELETE"])
 @jwt_required
 def delete_user():
-    data = request.get_json()
-    user_id = data.pop("user_id", None)
+    data = request.get_json(silent=True) or {}
+    email = request.current_user
 
-    if not user_id:
-        return jsonify({"error": "user_id é obrigatório"}), 400
-
-    result, error = delete_user_service(user_id, data)
+    result, error = delete_user_service(email, data)
 
     if error:
         return jsonify(error), 400
