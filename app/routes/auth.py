@@ -1,4 +1,6 @@
 import os
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+
 from flask import Blueprint, request, jsonify, redirect, session
 from ..services import (
     login_service,
@@ -11,6 +13,41 @@ from ..services import (
 )
 
 auth_bp = Blueprint("auth", __name__)
+
+
+def _frontend_target(env_name, default_path):
+    configured_url = os.getenv(env_name)
+    if configured_url:
+        return configured_url
+
+    frontend_url = os.getenv("FRONTEND_URL")
+    if not frontend_url:
+        return None
+
+    return f"{frontend_url.rstrip('/')}/{default_path.lstrip('/')}"
+
+
+def _with_url_params(url, query_params=None, fragment_params=None):
+    parts = urlsplit(url)
+    query = dict(parse_qsl(parts.query))
+    fragment = dict(parse_qsl(parts.fragment))
+
+    query.update(query_params or {})
+    fragment.update(fragment_params or {})
+
+    return urlunsplit(
+        (
+            parts.scheme,
+            parts.netloc,
+            parts.path,
+            urlencode(query),
+            urlencode(fragment),
+        )
+    )
+
+
+def _redirect_to_frontend(url, query_params=None, fragment_params=None):
+    return redirect(_with_url_params(url, query_params, fragment_params))
 
 
 @auth_bp.route("/auth/login", methods=["POST"])
@@ -27,10 +64,21 @@ def login():
 @auth_bp.route("/auth/verify-email/<token>", methods=["GET"])
 def verify_email(token):
     result, error = verify_email_service(token)
+    frontend_url = _frontend_target("FRONTEND_EMAIL_VERIFIED_URL", "/email-verified")
     if error:
+        if frontend_url:
+            return _redirect_to_frontend(
+                frontend_url,
+                {"status": "error", "message": error.get("error", "")},
+            )
         if error.get("error") == "Token inválido ou expirado":
             return jsonify(error), 404
         return jsonify(error), 400
+    if frontend_url:
+        return _redirect_to_frontend(
+            frontend_url,
+            {"status": "success", "message": result.get("message", "")},
+        )
     return jsonify(result), 200
 
 
@@ -48,8 +96,20 @@ def google_callback():
     code = request.args.get("code")
     code_verifier = session.pop("code_verifier", None)
     result, error = google_callback_service(code, code_verifier)
+    frontend_url = _frontend_target("FRONTEND_AUTH_CALLBACK_URL", "/auth/callback")
     if error:
+        if frontend_url:
+            return _redirect_to_frontend(
+                frontend_url,
+                {"status": "error", "message": error.get("error", "")},
+            )
         return jsonify(error), 400
+    if frontend_url:
+        return _redirect_to_frontend(
+            frontend_url,
+            {"status": "success"},
+            {"token": result["token"]},
+        )
     return jsonify(result), 200
 
 
