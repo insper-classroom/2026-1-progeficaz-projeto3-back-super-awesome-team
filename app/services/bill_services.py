@@ -16,6 +16,10 @@ def create_bill_service(data, created_by):
         group = mongo["groups"].find_one({"_id": ObjectId(data["group_id"])})
         if not group:
             return None, {"error": "Grupo não encontrado"}
+        if created_by not in group["members"]:
+            return None, {
+                "error": "Você não tem permissão para criar conta neste grupo"
+            }
 
         for member_data in data["members_to_pay"]:
             member_email = member_data["email"]

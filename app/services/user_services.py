@@ -2,7 +2,12 @@ import os
 from ..models import User
 from ..extensions import mongo
 from ..schemas import UserSchema, UpdateUserSchema, DeleteUserSchema
-from ..utils import send_email, send_welcome_email, send_confirm_email, get_user_by_email
+from ..utils import (
+    send_email,
+    send_welcome_email,
+    send_confirm_email,
+    get_user_by_email,
+)
 from bson import ObjectId
 import bcrypt
 import gevent
@@ -66,12 +71,8 @@ def update_user_service(user_email, data):
         return None, erros
 
     user = mongo["users"].find_one({"email": user_email})
-
-    user = mongo["users"].find_one({"email": email})
     if not user:
         return None, {"error": "Usuário não encontrado"}
-
-    oid = user["_id"]
 
     updated_fields = {}
 
@@ -82,7 +83,9 @@ def update_user_service(user_email, data):
         current_password = data.get("current_password")
 
         if not current_password:
-            return None, {"error": "É necessário inserir a senha atual para trocar a senha"}
+            return None, {
+                "error": "É necessário inserir a senha atual para trocar a senha"
+            }
 
         if not bcrypt.checkpw(
             current_password.encode("utf-8"), user["password"].encode("utf-8")
@@ -111,12 +114,11 @@ def delete_user_service(user_email, data):
     user = mongo["users"].find_one({"email": user_email})
     if not user:
         return None, {"error": "Usuário não encontrado"}
-    
+
     if user.get("auth_provider") == "google":
         mongo["users"].delete_one({"_id": user["_id"]})
         return {"message": "Usuário deletado com sucesso"}, None
-    
-    
+
     erros = delete_schema.validate(data)
     if erros:
         return None, erros

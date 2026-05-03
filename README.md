@@ -148,6 +148,17 @@ Em caso de dúvida, clique nos ícones do topo para acessar as respectivas docum
 
 ```py
     MONGODB_URI=mongodb+srv://usuario:<senha>@project3.7pbdixa.mongodb.net/?appName=project3
+    SECRET_KEY=troque-esse-valor
+    JWT_SECRET_KEY=troque-esse-valor
+    BASE_URL=http://localhost:5000
+    APP_URL=http://localhost:5173
+    FRONTEND_URL=http://localhost:5173
+    CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+    FRONTEND_AUTH_CALLBACK_URL=http://localhost:5173/auth/callback
+    FRONTEND_EMAIL_VERIFIED_URL=http://localhost:5173/email-verified
+    GOOGLE_WEB_CLIENT_ID=placeholder
+    GOOGLE_WEB_CLIENT_SECRET=placeholder
+    GOOGLE_REDIRECT_URI=http://localhost:5000/auth/google/callback
     CLIENT_ID=placeholder
     CLIENT_SECRET=placeholder
     REFRESH_TOKEN=placeholder
@@ -223,15 +234,16 @@ Authorization: Bearer <token>
 
 - O token usado nessas rotas vem do login local ou do login com Google.
 - Nos fluxos de recuperação de senha, o frontend precisa guardar o `reset_token` recebido na etapa de validação do código.
+- Se `FRONTEND_URL` ou as URLs específicas do frontend estiverem configuradas, a verificação de e-mail e o callback do Google redirecionam para o frontend. Sem essas variáveis, continuam respondendo JSON.
 
 ### Autenticação
 
 | Fluxo                          | Endpoint                         | O que o frontend precisa enviar | O que o frontend precisa capturar       |
 | ------------------------------ | -------------------------------- | ------------------------------- | --------------------------------------- |
 | Login local                    | `POST /auth/login`               | `email`, `password`             | `token`                                 |
-| Verificação de e-mail          | `GET /auth/verify-email/<token>` | Nenhum body                     | Apenas abrir o link recebido por e-mail |
+| Verificação de e-mail          | `GET /auth/verify-email/<token>` | Nenhum body                     | Redirect com `status` e `message`       |
 | Login com Google               | `GET /auth/google`               | Nenhum body                     | Redirecionamento para o Google          |
-| Callback do Google             | `GET /auth/google/callback`      | `code` vem na query string      | `token`                                 |
+| Callback do Google             | `GET /auth/google/callback`      | `code` vem na query string      | Redirect com `token` no fragment        |
 | Solicitar recuperação de senha | `POST /auth/forgot-password`     | `email`                         | Mensagem genérica de sucesso            |
 | Validar código de recuperação  | `POST /auth/verify-reset-code`   | `email`, `code`                 | `reset_token`                           |
 | Redefinir senha                | `POST /auth/reset-password`      | `reset_token`, `new_password`   | Mensagem de sucesso                     |
@@ -241,18 +253,22 @@ Authorization: Bearer <token>
 | Fluxo             | Endpoint       | O que o frontend precisa enviar                 | O que o frontend precisa capturar |
 | ----------------- | -------------- | ----------------------------------------------- | --------------------------------- |
 | Criar usuário     | `POST /user`   | `name`, `email`, `password`, `confirm_password` | Mensagem de sucesso               |
-| Listar usuários   | `GET /user`    | Nenhum body + JWT                               | Lista de usuários sem senha       |
-| Atualizar usuário | `PUT /user`    | `user_id` e campos a alterar                    | Mensagem de sucesso               |
-| Deletar usuário   | `DELETE /user` | `user_id`, `password`                           | Mensagem de sucesso               |
+| Usuário logado    | `GET /user/me` | Nenhum body + JWT                               | Dados do usuário autenticado      |
+| Atualizar usuário | `PUT /user`    | Campos a alterar + JWT                          | Mensagem de sucesso               |
+| Deletar usuário   | `DELETE /user` | `password` para usuário local + JWT             | Mensagem de sucesso               |
 
 Campos opcionais no update de usuário: `name`, `password`, `current_password`.
 Se o frontend enviar `password`, também precisa enviar `current_password`.
 
 ### Grupo
 
-| Fluxo       | Endpoint      | O que o frontend precisa enviar                 | O que o frontend precisa capturar |
-| ----------- | ------------- | ----------------------------------------------- | --------------------------------- |
-| Criar grupo | `POST /group` | `name`, opcionalmente `members` e `description` | Mensagem de sucesso               |
+| Fluxo                 | Endpoint             | O que o frontend precisa enviar                 | O que o frontend precisa capturar |
+| --------------------- | -------------------- | ----------------------------------------------- | --------------------------------- |
+| Criar grupo           | `POST /group`        | `name`, opcionalmente `members` e `description` | `group_id`                        |
+| Listar grupos         | `GET /group`         | Nenhum body + JWT                               | `groups`                          |
+| Buscar grupo por ID   | `GET /group/<id>`    | Apenas o id na URL + JWT                        | Grupo completo                    |
+| Atualizar grupo       | `PUT /group/<id>`    | Campos a alterar + JWT                          | Grupo atualizado                  |
+| Deletar grupo         | `DELETE /group/<id>` | Apenas o id na URL + JWT                        | Mensagem de sucesso               |
 
 O backend adiciona automaticamente o e-mail do usuário logado em `members` se ele não estiver na lista.
 
@@ -261,10 +277,10 @@ O backend adiciona automaticamente o e-mail do usuário logado em `members` se e
 | Fluxo                      | Endpoint                       | O que o frontend precisa enviar                                | O que o frontend precisa capturar |
 | -------------------------- | ------------------------------ | -------------------------------------------------------------- | --------------------------------- |
 | Criar despesa              | `POST /expense`                | `expense_type`, `value`, `expense_date`                        | `expense_id`                      |
-| Buscar despesa por ID      | `GET /expense/<expense_id>`    | Apenas o id na URL                                             | Despesa completa                  |
+| Buscar despesa por ID      | `GET /expense/<expense_id>`    | Apenas o id na URL + JWT                                       | Despesa completa                  |
 | Listar despesas do usuário | `GET /expense`                 | Nenhum body + JWT                                              | `expenses`                        |
-| Atualizar despesa          | `PUT /expense/<expense_id>`    | Qualquer combinação de `expense_type`, `value`, `expense_date` | Despesa atualizada                |
-| Deletar despesa            | `DELETE /expense/<expense_id>` | Apenas o id na URL                                             | Mensagem de sucesso               |
+| Atualizar despesa          | `PUT /expense/<expense_id>`    | Campos a alterar + JWT                                         | Despesa atualizada                |
+| Deletar despesa            | `DELETE /expense/<expense_id>` | Apenas o id na URL + JWT                                       | Mensagem de sucesso               |
 
 `expense_date` deve ser enviado em formato de data/hora aceito pelo backend.
 
@@ -273,6 +289,11 @@ O backend adiciona automaticamente o e-mail do usuário logado em `members` se e
 | Fluxo                  | Endpoint                           | O que o frontend precisa enviar                          | O que o frontend precisa capturar |
 | ---------------------- | ---------------------------------- | -------------------------------------------------------- | --------------------------------- |
 | Criar conta            | `POST /bill`                       | `bill_type`, `total_value`, `group_id`, `members_to_pay` | `bill_id`, `pendencies_created`   |
+| Listar contas          | `GET /bill`                        | Nenhum body + JWT                                        | `bills`                           |
+| Listar contas do grupo | `GET /group/<group_id>/bill`       | Apenas o id na URL + JWT                                 | `bills`                           |
+| Buscar conta por ID    | `GET /bill/<bill_id>`              | Apenas o id na URL + JWT                                 | Conta completa                    |
+| Atualizar conta        | `PUT /bill/<bill_id>`              | Campos a alterar + JWT                                   | Conta atualizada                  |
+| Deletar conta          | `DELETE /bill/<bill_id>`           | Apenas o id na URL + JWT                                 | Mensagem de sucesso               |
 | Marcar conta como paga | `PUT /bill/<bill_id>/mark-as-paid` | Apenas o id na URL + JWT                                 | Mensagem de sucesso               |
 
 `members_to_pay` deve ser uma lista de objetos no formato:
@@ -286,8 +307,9 @@ O backend adiciona automaticamente o e-mail do usuário logado em `members` se e
 | Fluxo                             | Endpoint                                         | O que o frontend precisa enviar | O que o frontend precisa capturar |
 | --------------------------------- | ------------------------------------------------ | ------------------------------- | --------------------------------- |
 | Listar pendências do usuário      | `GET /pendencies`                                | Nenhum body + JWT               | `as_debtor` e `as_creditor`       |
-| Buscar pendência por ID           | `GET /pendencies/<pendency_id>`                  | Apenas o id na URL              | Pendência completa                |
-| Listar pendências de uma conta    | `GET /bill/<bill_id>/pendencies`                 | Apenas o id na URL              | `pendencies`                      |
+| Buscar pendência por ID           | `GET /pendencies/<pendency_id>`                  | Apenas o id na URL + JWT        | Pendência completa                |
+| Listar pendências de uma conta    | `GET /bill/<bill_id>/pendencies`                 | Apenas o id na URL + JWT        | `pendencies`                      |
+| Listar pendências de um grupo     | `GET /group/<group_id>/pendencies`               | Apenas o id na URL + JWT        | `pendencies`                      |
 | Confirmar pagamento como devedor  | `PUT /pendencies/<pendency_id>/confirm-debtor`   | Apenas o id na URL + JWT        | Mensagem de confirmação           |
 | Confirmar recebimento como credor | `PUT /pendencies/<pendency_id>/confirm-creditor` | Apenas o id na URL + JWT        | Mensagem de confirmação           |
 
@@ -371,7 +393,8 @@ reset_token = <token recebido em /auth/verify-reset-code>
 2. **Callback do Google**
    - O backend recebe o `code` na query string.
    - Se você quiser simular manualmente, use a URL recebida pelo Google no callback.
-   - A resposta final traz o `token`, que deve ser salvo em `auth_token`.
+   - Sem `FRONTEND_URL`, a resposta final traz o `token`, que deve ser salvo em `auth_token`.
+   - Com `FRONTEND_URL`, o backend redireciona para o frontend com `token` no fragment da URL.
 
 ### 4. Fluxo de recuperação de senha
 
@@ -418,9 +441,9 @@ reset_token = <token recebido em /auth/verify-reset-code>
 
 ### 5. Fluxo de usuário (rotas protegidas)
 
-1. **Listar usuários**
+1. **Buscar usuário logado**
    - Método: `GET`
-   - URL: `{{base_url}}/user`
+   - URL: `{{base_url}}/user/me`
    - Header:
 
 ```http
@@ -440,7 +463,6 @@ Authorization: Bearer {{auth_token}}
 
 ```json
 {
-  "user_id": "id_do_usuario",
   "name": "Novo Nome"
 }
 ```
@@ -449,7 +471,6 @@ Authorization: Bearer {{auth_token}}
 
 ```json
 {
-  "user_id": "id_do_usuario",
   "password": "NovaSenha123",
   "current_password": "SenhaAtual123"
 }
@@ -468,7 +489,6 @@ Authorization: Bearer {{auth_token}}
 
 ```json
 {
-  "user_id": "id_do_usuario",
   "password": "SenhaAtual123"
 }
 ```
@@ -493,6 +513,29 @@ Authorization: Bearer {{auth_token}}
   "description": "Grupo para dividir despesas da viagem"
 }
 ```
+
+    - Salve o `group_id` retornado para criar contas nesse grupo.
+
+2. **Listar meus grupos**
+   - Método: `GET`
+   - URL: `{{base_url}}/group`
+   - Header com `auth_token`.
+
+3. **Buscar grupo pelo ID**
+   - Método: `GET`
+   - URL: `{{base_url}}/group/<group_id>`
+   - Header com `auth_token`.
+
+4. **Editar grupo**
+   - Método: `PUT`
+   - URL: `{{base_url}}/group/<group_id>`
+   - Header com `auth_token`.
+   - Body com os campos que deseja alterar.
+
+5. **Excluir grupo**
+   - Método: `DELETE`
+   - URL: `{{base_url}}/group/<group_id>`
+   - Header com `auth_token`.
 
 ### 7. Fluxo de despesa
 
@@ -556,7 +599,33 @@ Authorization: Bearer {{auth_token}}
 }
 ```
 
-2. **Marcar como paga**
+2. **Listar minhas contas**
+   - Método: `GET`
+   - URL: `{{base_url}}/bill`
+   - Header com `auth_token`.
+
+3. **Listar contas de um grupo**
+   - Método: `GET`
+   - URL: `{{base_url}}/group/<group_id>/bill`
+   - Header com `auth_token`.
+
+4. **Buscar conta pelo ID**
+   - Método: `GET`
+   - URL: `{{base_url}}/bill/<bill_id>`
+   - Header com `auth_token`.
+
+5. **Editar conta**
+   - Método: `PUT`
+   - URL: `{{base_url}}/bill/<bill_id>`
+   - Header com `auth_token`.
+   - Body com os campos que deseja alterar.
+
+6. **Excluir conta**
+   - Método: `DELETE`
+   - URL: `{{base_url}}/bill/<bill_id>`
+   - Header com `auth_token`.
+
+7. **Marcar como paga**
    - Método: `PUT`
    - URL: `{{base_url}}/bill/<bill_id>/mark-as-paid`
    - Header com `auth_token`.
@@ -578,12 +647,17 @@ Authorization: Bearer {{auth_token}}
    - URL: `{{base_url}}/bill/<bill_id>/pendencies`
    - Header com `auth_token`.
 
-4. **Confirmar como devedor**
+4. **Listar pendências de um grupo**
+   - Método: `GET`
+   - URL: `{{base_url}}/group/<group_id>/pendencies`
+   - Header com `auth_token`.
+
+5. **Confirmar como devedor**
    - Método: `PUT`
    - URL: `{{base_url}}/pendencies/<pendency_id>/confirm-debtor`
    - Header com `auth_token`.
 
-5. **Confirmar como credor**
+6. **Confirmar como credor**
    - Método: `PUT`
    - URL: `{{base_url}}/pendencies/<pendency_id>/confirm-creditor`
    - Header com `auth_token`.
@@ -593,9 +667,11 @@ Authorization: Bearer {{auth_token}}
 1. Criar usuário.
 2. Confirmar e-mail.
 3. Fazer login e salvar `auth_token`.
-4. Testar rotas de usuário protegidas (`GET /user`, `PUT /user` e `DELETE /user`) quando necessário.
-5. Criar grupo.
-6. Criar despesa.
-7. Criar conta.
-8. Consultar e confirmar pendências.
-9. Testar o fluxo de recuperação de senha por último.
+4. Buscar o usuário logado com `GET /user/me`.
+5. Criar grupo e salvar `group_id`.
+6. Listar ou buscar o grupo criado quando necessário.
+7. Criar despesa.
+8. Criar conta usando o `group_id`.
+9. Listar ou buscar contas.
+10. Consultar e confirmar pendências.
+11. Testar o fluxo de recuperação de senha por último.

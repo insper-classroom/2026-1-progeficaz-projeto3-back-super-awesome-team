@@ -66,7 +66,9 @@ GOOGLE_CLIENT_CONFIG = {
     }
 }
 
-GOOGLE_REDIRECT_URI = "http://localhost:5000/auth/google/callback"
+GOOGLE_REDIRECT_URI = os.getenv(
+    "GOOGLE_REDIRECT_URI", "http://localhost:5000/auth/google/callback"
+)
 
 
 def get_google_auth_url():
