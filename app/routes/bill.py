@@ -1,6 +1,4 @@
 from flask import Blueprint, request, jsonify
-from ..extensions import mongo
-from ..models import Bill
 from ..services import (
     create_bill_service,
     get_user_bills_service,
@@ -10,7 +8,7 @@ from ..services import (
     delete_bill_service,
     mark_bill_as_paid_service,
 )
-from ..utils import jwt_required
+from ..utils import jwt_required, http_status_for_service_error
 
 bill_bp = Blueprint("bill", __name__)
 
@@ -22,7 +20,7 @@ def create_bill():
     user_email = request.current_user
     result, error = create_bill_service(data, user_email)
     if error:
-        return jsonify(error), 400
+        return jsonify(error), http_status_for_service_error(error)
     return jsonify(result), 201
 
 
@@ -42,8 +40,7 @@ def get_group_bills(group_id):
     user_email = request.current_user
     bills, error = get_group_bills_service(group_id, user_email)
     if error:
-        status_code = 404 if "não encontrado" in error.get("error", "") else 403
-        return jsonify(error), status_code
+        return jsonify(error), http_status_for_service_error(error)
     return jsonify({"bills": bills}), 200
 
 
@@ -53,8 +50,7 @@ def get_bill(bill_id):
     user_email = request.current_user
     bill, error = get_bill_service(bill_id, user_email)
     if error:
-        status_code = 404 if "não encontrado" in error.get("error", "") else 403
-        return jsonify(error), status_code
+        return jsonify(error), http_status_for_service_error(error)
     return jsonify(bill), 200
 
 
@@ -65,8 +61,7 @@ def update_bill(bill_id):
     user_email = request.current_user
     result, error = update_bill_service(bill_id, data, user_email)
     if error:
-        status_code = 404 if "não encontrado" in error.get("error", "") else 400
-        return jsonify(error), status_code
+        return jsonify(error), http_status_for_service_error(error)
     return jsonify(result), 200
 
 
@@ -76,8 +71,7 @@ def delete_bill(bill_id):
     user_email = request.current_user
     result, error = delete_bill_service(bill_id, user_email)
     if error:
-        status_code = 404 if "não encontrado" in error.get("error", "") else 403
-        return jsonify(error), status_code
+        return jsonify(error), http_status_for_service_error(error)
     return jsonify(result), 200
 
 
@@ -87,9 +81,5 @@ def mark_bill_as_paid(bill_id):
     user_email = request.current_user
     result, error = mark_bill_as_paid_service(bill_id, user_email)
     if error:
-        error_message = error.get("error", "")
-        if "não encontrada" in error_message:
-            return jsonify(error), 404
-        else:
-            return jsonify(error), 403
+        return jsonify(error), http_status_for_service_error(error)
     return jsonify(result), 200

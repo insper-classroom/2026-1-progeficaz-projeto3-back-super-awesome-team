@@ -1,6 +1,4 @@
 from flask import Blueprint, request, jsonify
-from ..extensions import mongo
-from ..models import Expense
 from ..services import (
     create_expense_service,
     get_expense_service,
@@ -8,7 +6,7 @@ from ..services import (
     update_expense_service,
     delete_expense_service,
 )
-from ..utils import jwt_required
+from ..utils import jwt_required, http_status_for_service_error
 
 expense_bp = Blueprint("expense", __name__)
 
@@ -20,16 +18,17 @@ def create_expense():
     user_email = request.current_user
     result, error = create_expense_service(data, user_email)
     if error:
-        return jsonify(error), 400
+        return jsonify(error), http_status_for_service_error(error)
     return jsonify(result), 201
 
 
 @expense_bp.route("/expense/<expense_id>", methods=["GET"])
 @jwt_required
 def get_expense(expense_id):
-    expense, error = get_expense_service(expense_id)
+    user_email = request.current_user
+    expense, error = get_expense_service(expense_id, user_email)
     if error:
-        return jsonify(error), 404
+        return jsonify(error), http_status_for_service_error(error)
     return jsonify(expense), 200
 
 
@@ -50,7 +49,7 @@ def update_expense(expense_id):
     user_email = request.current_user
     result, error = update_expense_service(expense_id, data, user_email)
     if error:
-        return jsonify(error), 400
+        return jsonify(error), http_status_for_service_error(error)
     return jsonify(result), 200
 
 
@@ -60,5 +59,5 @@ def delete_expense(expense_id):
     user_email = request.current_user
     result, error = delete_expense_service(expense_id, user_email)
     if error:
-        return jsonify(error), 400
+        return jsonify(error), http_status_for_service_error(error)
     return jsonify(result), 200

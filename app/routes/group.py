@@ -1,6 +1,4 @@
 from flask import Blueprint, request, jsonify
-from ..extensions import mongo
-from ..models import Group
 from ..services import (
     create_group_service,
     get_user_groups_service,
@@ -8,7 +6,7 @@ from ..services import (
     update_group_service,
     delete_group_service,
 )
-from ..utils import jwt_required
+from ..utils import jwt_required, http_status_for_service_error
 
 group_bp = Blueprint("group", __name__)
 
@@ -20,7 +18,7 @@ def create_group():
     user_email = request.current_user
     result, error = create_group_service(data, user_email)
     if error:
-        return jsonify(error), 400
+        return jsonify(error), http_status_for_service_error(error)
     return jsonify(result), 201
 
 
@@ -40,8 +38,7 @@ def get_group(group_id):
     user_email = request.current_user
     group, error = get_group_service(group_id, user_email)
     if error:
-        status_code = 404 if "não encontrado" in error.get("error", "") else 403
-        return jsonify(error), status_code
+        return jsonify(error), http_status_for_service_error(error)
     return jsonify(group), 200
 
 
@@ -52,8 +49,7 @@ def update_group(group_id):
     user_email = request.current_user
     result, error = update_group_service(group_id, data, user_email)
     if error:
-        status_code = 404 if "não encontrado" in error.get("error", "") else 400
-        return jsonify(error), status_code
+        return jsonify(error), http_status_for_service_error(error)
     return jsonify(result), 200
 
 
@@ -63,6 +59,5 @@ def delete_group(group_id):
     user_email = request.current_user
     result, error = delete_group_service(group_id, user_email)
     if error:
-        status_code = 404 if "não encontrado" in error.get("error", "") else 403
-        return jsonify(error), status_code
+        return jsonify(error), http_status_for_service_error(error)
     return jsonify(result), 200
