@@ -41,17 +41,12 @@ def create_user_service(data):
     return {"message": "OK ✅"}, None
 
 
-def update_user_service(user_id, data):
+def update_user_service(email, data):
     erros = update_schema.validate(data)
     if erros:
         return None, erros
-    try:
-        oid = ObjectId(user_id)
-    except Exception:
-        return None, {"error": "ID inválido"}
 
-    user = mongo["users"].find_one({"_id": oid})
-
+    user = mongo["users"].find_one({"email": email})
     if not user:
         return None, {"error": "Usuário não encontrado"}
 
@@ -64,39 +59,36 @@ def update_user_service(user_id, data):
         current_password = data.get("current_password")
 
         if not current_password:
-            return None, {"error": "Current password is required to set a new password"}
+            return None, {"error": "É necessário inserir a senha atual para trocar a senha"}
 
         if not bcrypt.checkpw(
             current_password.encode("utf-8"), user["password"].encode("utf-8")
         ):
-            return None, {"error": "Current password is incorrect"}
+            return None, {"error": "Senha atual incorreta"}
 
         hashed = bcrypt.hashpw(
             data["password"].encode("utf-8"), bcrypt.gensalt()
         ).decode("utf-8")
+
         updated_fields["password"] = hashed
 
     if not updated_fields:
         return None, {"error": "Nenhum campo alterado"}
 
-    mongo["users"].update_one({"_id": oid}, {"$set": updated_fields})
+    mongo["users"].update_one({"_id": user["_id"]}, {"$set": updated_fields})
 
-    return {"message1": "Usuário atualizado com sucesso"}, None
+    return {"message": "Usuário atualizado com sucesso"}, None
 
 
-def delete_user_service(user_id, data):
+def delete_user_service(email, data):
 
-    try:
-        oid = ObjectId(user_id)
-    except Exception:
-        return None, {"error": "ID inválido"}
+    user = mongo["users"].find_one({"email": email})
 
-    user = mongo["users"].find_one({"_id": oid})
     if not user:
         return None, {"error": "Usuário não encontrado"}
     
     if user.get("auth_provider") == "google":
-        mongo["users"].delete_one({"_id": oid})
+        mongo["users"].delete_one({"_id": user["_id"]})
         return {"message": "Usuário deletado com sucesso"}, None
     
     
@@ -110,7 +102,7 @@ def delete_user_service(user_id, data):
     ):
         return None, {"error": "Senha incorreta"}
 
-    mongo["users"].delete_one({"_id": oid})
+    mongo["users"].delete_one({"_id": user["_id"]})
 
     return {"message": "Usuário deletado com sucesso"}, None
 
