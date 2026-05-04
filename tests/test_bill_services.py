@@ -28,6 +28,7 @@ BILL_DOC = {
     "bill_type": "Aluguel",
     "total_value": 1000.0,
     "group_id": GROUP_ID,
+    "pix_key": "creator@example.com",
     "members_to_pay": [{"email": "member@example.com", "value": 500.0}],
     "created_by": "creator@example.com",
     "is_paid": False,
@@ -37,6 +38,7 @@ BILL_PAYLOAD = {
     "bill_type": "Aluguel",
     "total_value": 1000.0,
     "group_id": GROUP_ID,
+    "pix_key": "creator@example.com",
     "members_to_pay": [{"email": "member@example.com", "value": 500.0}],
 }
 
@@ -117,6 +119,7 @@ def test_create_bill_ok():
         assert result["pendencies_created"] == 1
         inserted_bill = bills_col.insert_one.call_args.args[0]
         assert inserted_bill["due_date"] == "2026-06-10T00:00:00"
+        assert inserted_bill["pix_key"] == "creator@example.com"
 
 
 def test_create_bill_pendency_error_rolls_back():
@@ -313,12 +316,16 @@ def test_update_bill_ok():
         mock_mongo.__getitem__.return_value.find_one.return_value = bill_doc
 
         result, error = update_bill_service(
-            BILL_ID, {"bill_type": "Luz"}, "creator@example.com"
+            BILL_ID,
+            {"bill_type": "Luz", "pix_key": "11999999999"},
+            "creator@example.com",
         )
 
         assert error is None
         assert result["message"] == "Conta atualizada com sucesso"
         mock_mongo.__getitem__.return_value.update_one.assert_called_once()
+        update_data = mock_mongo.__getitem__.return_value.update_one.call_args.args[1]
+        assert update_data["$set"]["pix_key"] == "11999999999"
 
 
 def test_delete_bill_not_found():

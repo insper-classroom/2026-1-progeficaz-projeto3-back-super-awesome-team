@@ -31,6 +31,7 @@ def create_bill_service(data, created_by):
             data["bill_type"],
             data["total_value"],
             data["group_id"],
+            data["pix_key"],
             data["members_to_pay"],
             created_by,
             data.get("is_paid", False),
@@ -139,6 +140,11 @@ def update_bill_service(bill_id, data, user_email):
             update_data["bill_type"] = data["bill_type"]
         if "total_value" in data:
             update_data["total_value"] = data["total_value"]
+        if "pix_key" in data:
+            pix_key = str(data["pix_key"]).strip()
+            if not pix_key:
+                return None, {"error": "Chave PIX é obrigatória"}
+            update_data["pix_key"] = pix_key
         if "due_date" in data:
             update_data["due_date"] = data["due_date"]
 

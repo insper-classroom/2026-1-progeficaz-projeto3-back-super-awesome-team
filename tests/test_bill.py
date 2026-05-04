@@ -7,6 +7,7 @@ BILL_PAYLOAD = {
     "bill_type": "Aluguel",
     "total_value": 1000.0,
     "group_id": GROUP_ID,
+    "pix_key": "test@example.com",
     "members_to_pay": [{"email": "other@example.com", "value": 500.0}],
 }
 
@@ -15,6 +16,7 @@ BILL_DATA = {
     "bill_type": "Aluguel",
     "total_value": 1000.0,
     "group_id": GROUP_ID,
+    "pix_key": "test@example.com",
     "members_to_pay": [{"email": "other@example.com", "value": 500.0}],
     "created_by": "test@example.com",
     "is_paid": False,
