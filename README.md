@@ -307,7 +307,8 @@ O backend adiciona automaticamente o e-mail do usuário logado em `members` se e
 | ---------------------- | ---------------------------------- | -------------------------------------------------------- | --------------------------------- |
 | Criar conta            | `POST /bill`                       | `bill_type`, `total_value`, `group_id`, `members_to_pay` | `bill_id`, `pendencies_created`   |
 | Listar contas          | `GET /bill`                        | Nenhum body + JWT                                        | `bills`                           |
-| Listar contas do grupo | `GET /group/<group_id>/bill`       | Apenas o id na URL + JWT                                 | `bills`                           |
+| Listar contas do grupo | `GET /group/<group_id>/bill`       | Apenas o id na URL + JWT; opcionais `search`, `q`, `status`, `month` na query | `bills`                           |
+| Mapa de calor do grupo | `GET /group/<group_id>/bill/heatmap` | Apenas o id na URL + JWT; opcional `month=YYYY-MM`       | `heatmap`                         |
 | Buscar conta por ID    | `GET /bill/<bill_id>`              | Apenas o id na URL + JWT                                 | Conta completa                    |
 | Atualizar conta        | `PUT /bill/<bill_id>`              | Campos a alterar + JWT                                   | Conta atualizada                  |
 | Deletar conta          | `DELETE /bill/<bill_id>`           | Apenas o id na URL + JWT                                 | Mensagem de sucesso               |
@@ -318,6 +319,14 @@ O backend adiciona automaticamente o e-mail do usuário logado em `members` se e
 ```json
 [{ "email": "pessoa@exemplo.com", "value": 25.5 }]
 ```
+
+Filtros opcionais de contas do grupo:
+
+- `search` ou `q`: busca por nome da conta, credor, chave PIX ou membros.
+- `status`: `abertas`, `minhas`, `vencidas` ou `concluidas`.
+- `month`: mês de referência no formato `YYYY-MM`.
+
+O mapa de calor usa `created_at` das contas e retorna `total_month`, `highest_day`, `highest_value`, `days_with_bills` e `cells`.
 
 ### Pendências
 

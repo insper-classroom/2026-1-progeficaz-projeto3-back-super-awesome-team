@@ -3,6 +3,7 @@ from ..services import (
     create_bill_service,
     get_user_bills_service,
     get_group_bills_service,
+    get_group_bills_heatmap_service,
     get_bill_service,
     update_bill_service,
     delete_bill_service,
@@ -38,10 +39,27 @@ def get_user_bills():
 @jwt_required
 def get_group_bills(group_id):
     user_email = request.current_user
-    bills, error = get_group_bills_service(group_id, user_email)
+    filters = {
+        "search": request.args.get("search") or request.args.get("q"),
+        "status": request.args.get("status"),
+        "month": request.args.get("month"),
+    }
+    bills, error = get_group_bills_service(group_id, user_email, filters)
     if error:
         return jsonify(error), http_status_for_service_error(error)
     return jsonify({"bills": bills}), 200
+
+
+@bill_bp.route("/group/<group_id>/bill/heatmap", methods=["GET"])
+@jwt_required
+def get_group_bills_heatmap(group_id):
+    user_email = request.current_user
+    heatmap, error = get_group_bills_heatmap_service(
+        group_id, user_email, request.args.get("month")
+    )
+    if error:
+        return jsonify(error), http_status_for_service_error(error)
+    return jsonify({"heatmap": heatmap}), 200
 
 
 @bill_bp.route("/bill/<bill_id>", methods=["GET"])

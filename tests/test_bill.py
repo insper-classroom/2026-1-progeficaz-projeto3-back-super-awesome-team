@@ -31,7 +31,11 @@ def test_create_bill_no_token(client):
 @patch("app.routes.bill.create_bill_service")
 def test_create_bill_ok(mock_service, client, auth_headers):
     mock_service.return_value = (
-        {"message": "Conta criada com sucesso", "bill_id": BILL_ID, "pendencies_created": 1},
+        {
+            "message": "Conta criada com sucesso",
+            "bill_id": BILL_ID,
+            "pendencies_created": 1,
+        },
         None,
     )
     response = client.post("/bill", json=BILL_PAYLOAD, headers=auth_headers)
@@ -41,7 +45,10 @@ def test_create_bill_ok(mock_service, client, auth_headers):
 
 @patch("app.routes.bill.create_bill_service")
 def test_create_bill_validation_error(mock_service, client, auth_headers):
-    mock_service.return_value = (None, {"bill_type": ["Missing data for required field."]})
+    mock_service.return_value = (
+        None,
+        {"bill_type": ["Missing data for required field."]},
+    )
     response = client.post("/bill", json={}, headers=auth_headers)
     assert response.status_code == 400
 
@@ -87,6 +94,21 @@ def test_get_group_bills_ok(mock_service, client, auth_headers):
 
 
 @patch("app.routes.bill.get_group_bills_service")
+def test_get_group_bills_with_filters(mock_service, client, auth_headers):
+    mock_service.return_value = ([BILL_DATA], None)
+    response = client.get(
+        f"/group/{GROUP_ID}/bill?search=aluguel&status=abertas&month=2026-05",
+        headers=auth_headers,
+    )
+    assert response.status_code == 200
+    mock_service.assert_called_once_with(
+        GROUP_ID,
+        "test@example.com",
+        {"search": "aluguel", "status": "abertas", "month": "2026-05"},
+    )
+
+
+@patch("app.routes.bill.get_group_bills_service")
 def test_get_group_bills_not_found(mock_service, client, auth_headers):
     mock_service.return_value = (None, {"error": "Grupo não encontrado"})
     response = client.get(f"/group/{GROUP_ID}/bill", headers=auth_headers)
@@ -98,6 +120,32 @@ def test_get_group_bills_forbidden(mock_service, client, auth_headers):
     mock_service.return_value = (None, {"error": "Você não é membro deste grupo"})
     response = client.get(f"/group/{GROUP_ID}/bill", headers=auth_headers)
     assert response.status_code == 403
+
+
+def test_get_group_bills_heatmap_no_token(client):
+    response = client.get(f"/group/{GROUP_ID}/bill/heatmap?month=2026-05")
+    assert response.status_code == 401
+
+
+@patch("app.routes.bill.get_group_bills_heatmap_service")
+def test_get_group_bills_heatmap_ok(mock_service, client, auth_headers):
+    mock_service.return_value = (
+        {
+            "month": "2026-05",
+            "total_month": 1000.0,
+            "highest_day": 4,
+            "highest_value": 1000.0,
+            "days_with_bills": 1,
+            "cells": [],
+        },
+        None,
+    )
+    response = client.get(
+        f"/group/{GROUP_ID}/bill/heatmap?month=2026-05", headers=auth_headers
+    )
+    assert response.status_code == 200
+    assert response.get_json()["heatmap"]["total_month"] == 1000.0
+    mock_service.assert_called_once_with(GROUP_ID, "test@example.com", "2026-05")
 
 
 @patch("app.routes.bill.get_bill_service")
