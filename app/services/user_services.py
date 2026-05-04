@@ -33,7 +33,7 @@ def create_user_service(data):
     hashed = bcrypt.hashpw(data["password"].encode("utf-8"), bcrypt.gensalt()).decode(
         "utf-8"
     )
-    user = User(data["name"], data["email"], hashed)
+    user = User(data["name"], data["email"], hashed, image=data.get("image"))
     mongo["users"].insert_one(user.to_dictionary())
 
     token = user.verification_token
@@ -78,6 +78,9 @@ def update_user_service(user_email, data):
 
     if "name" in data:
         updated_fields["name"] = data["name"]
+
+    if "image" in data:
+        updated_fields["image"] = data["image"]
 
     if "password" in data:
         current_password = data.get("current_password")

@@ -51,6 +51,41 @@ def test_create_group_member_not_found(mock_service, client, auth_headers):
     assert response.status_code == 404
 
 
+@patch("app.routes.group.create_group_service")
+def test_create_group_with_image_ok(mock_service, client, auth_headers):
+    mock_service.return_value = (
+        {"message": "Grupo criado com sucesso", "group_id": GROUP_ID},
+        None,
+    )
+    response = client.post(
+        "/group",
+        json={
+            "name": "My Group",
+            "members": ["test@example.com"],
+            "image": "https://example.com/group.jpg",
+        },
+        headers=auth_headers,
+    )
+    assert response.status_code == 201
+    assert response.get_json()["group_id"] == GROUP_ID
+
+
+@patch("app.routes.group.update_group_service")
+def test_update_group_image_ok(mock_service, client, auth_headers):
+    updated = {**GROUP_DATA, "image": "https://example.com/new-group.jpg"}
+    mock_service.return_value = (
+        {"message": "Grupo atualizado com sucesso", "group": updated},
+        None,
+    )
+    response = client.put(
+        f"/group/{GROUP_ID}",
+        json={"image": "https://example.com/new-group.jpg"},
+        headers=auth_headers,
+    )
+    assert response.status_code == 200
+    assert response.get_json()["message"] == "Grupo atualizado com sucesso"
+
+
 def test_get_user_groups_no_token(client):
     response = client.get("/group")
     assert response.status_code == 401

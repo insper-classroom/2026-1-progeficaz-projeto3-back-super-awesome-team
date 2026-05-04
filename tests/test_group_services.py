@@ -71,6 +71,34 @@ def test_create_group_ok():
         groups_col.insert_one.assert_called_once()
 
 
+def test_create_group_with_image_ok():
+    with patch("app.services.group_services.mongo") as mock_mongo:
+        users_col = MagicMock()
+        users_col.find_one.return_value = {"email": "creator@example.com"}
+        groups_col = MagicMock()
+        mock_result = MagicMock()
+        mock_result.inserted_id = OBJ_GROUP_ID
+        groups_col.insert_one.return_value = mock_result
+        mock_mongo.__getitem__.side_effect = {
+            "users": users_col,
+            "groups": groups_col,
+        }.get
+
+        result, error = create_group_service(
+            {
+                "name": "My Group",
+                "members": ["creator@example.com"],
+                "image": "https://example.com/group.jpg",
+            },
+            "creator@example.com",
+        )
+
+        assert error is None
+        assert result["message"] == "Grupo criado com sucesso"
+        call_args = groups_col.insert_one.call_args[0][0]
+        assert call_args["image"] == "https://example.com/group.jpg"
+
+
 def test_create_group_adds_creator_if_missing():
     with patch("app.services.group_services.mongo") as mock_mongo:
         users_col = MagicMock()
@@ -144,6 +172,22 @@ def test_get_group_ok():
 
         assert error is None
         assert result["_id"] == GROUP_ID
+
+
+def test_update_group_image_ok():
+    with patch("app.services.group_services.mongo") as mock_mongo:
+        doc = {**GROUP_DOC, "_id": OBJ_GROUP_ID}
+        mock_mongo.__getitem__.return_value.find_one.return_value = doc
+
+        result, error = update_group_service(
+            GROUP_ID,
+            {"image": "https://example.com/group.jpg"},
+            "creator@example.com",
+        )
+
+        assert error is None
+        assert result["message"] == "Grupo atualizado com sucesso"
+        mock_mongo.__getitem__.return_value.update_one.assert_called_once()
 
 
 def test_update_group_not_found():

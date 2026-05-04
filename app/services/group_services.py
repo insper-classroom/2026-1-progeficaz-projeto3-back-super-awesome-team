@@ -25,7 +25,7 @@ def create_group_service(data, user_email):
             if not user:
                 return None, {"error": f"Usuário {member_email} não encontrado"}
 
-        group = Group(data["name"], members, user_email, data.get("description"))
+        group = Group(data["name"], members, user_email, data.get("description"), data.get("image"))
         result = mongo["groups"].insert_one(group.to_dictionary())
         return {
             "message": "Grupo criado com sucesso",
@@ -78,6 +78,8 @@ def update_group_service(group_id, data, user_email):
             update_data["name"] = data["name"]
         if "description" in data:
             update_data["description"] = data["description"]
+        if "image" in data:
+            update_data["image"] = data["image"]
 
         # Processa adição e remoção de membros
         if "members" in data:
