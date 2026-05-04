@@ -123,6 +123,11 @@ def test_confirm_debtor_ok():
         assert error is None
         assert result == {"message": "Confirmação do devedor registrada"}
         mock_mongo.__getitem__.return_value.update_one.assert_called_once()
+        update_data = mock_mongo.__getitem__.return_value.update_one.call_args.args[1][
+            "$set"
+        ]
+        assert update_data["debtor_confirmed"] is True
+        assert "debtor_confirmed_at" in update_data
 
 
 def test_confirm_debtor_resolves_when_creditor_already_confirmed():
@@ -138,6 +143,8 @@ def test_confirm_debtor_resolves_when_creditor_already_confirmed():
         call_kwargs = mock_mongo.__getitem__.return_value.update_one.call_args
         update_data = call_kwargs[0][1]["$set"]
         assert update_data.get("is_resolved") is True
+        assert "debtor_confirmed_at" in update_data
+        assert "resolved_at" in update_data
 
 
 def test_confirm_creditor_not_found():
@@ -175,6 +182,11 @@ def test_confirm_creditor_ok():
         assert error is None
         assert result == {"message": "Confirmação do credor registrada"}
         mock_mongo.__getitem__.return_value.update_one.assert_called_once()
+        update_data = mock_mongo.__getitem__.return_value.update_one.call_args.args[1][
+            "$set"
+        ]
+        assert update_data["creditor_confirmed"] is True
+        assert "creditor_confirmed_at" in update_data
 
 
 def test_confirm_creditor_resolves_when_debtor_already_confirmed():
@@ -190,6 +202,8 @@ def test_confirm_creditor_resolves_when_debtor_already_confirmed():
         call_kwargs = mock_mongo.__getitem__.return_value.update_one.call_args
         update_data = call_kwargs[0][1]["$set"]
         assert update_data.get("is_resolved") is True
+        assert "creditor_confirmed_at" in update_data
+        assert "resolved_at" in update_data
 
 
 def test_get_user_pendencies_ok():

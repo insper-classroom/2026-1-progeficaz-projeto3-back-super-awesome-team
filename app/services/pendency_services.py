@@ -44,11 +44,15 @@ def confirm_debtor_payment_service(pendency_id, user_email):
             return None, {"error": "Apenas o devedor pode confirmar o pagamento"}
 
         update_data = {"debtor_confirmed": True}
+        confirmed_at = pendency.get("debtor_confirmed_at")
+        if not pendency.get("debtor_confirmed") or not confirmed_at:
+            confirmed_at = datetime.utcnow()
+            update_data["debtor_confirmed_at"] = confirmed_at
 
         # Se o credor já confirmou, marcar como resolvida
         if pendency["creditor_confirmed"]:
             update_data["is_resolved"] = True
-            update_data["resolved_at"] = datetime.utcnow()
+            update_data["resolved_at"] = pendency.get("resolved_at") or confirmed_at
 
         mongo["pendencies"].update_one(
             {"_id": ObjectId(pendency_id)}, {"$set": update_data}
@@ -70,11 +74,15 @@ def confirm_creditor_payment_service(pendency_id, user_email):
             return None, {"error": "Apenas o credor pode confirmar o recebimento"}
 
         update_data = {"creditor_confirmed": True}
+        confirmed_at = pendency.get("creditor_confirmed_at")
+        if not pendency.get("creditor_confirmed") or not confirmed_at:
+            confirmed_at = datetime.utcnow()
+            update_data["creditor_confirmed_at"] = confirmed_at
 
         # Se o devedor já confirmou, marcar como resolvida
         if pendency["debtor_confirmed"]:
             update_data["is_resolved"] = True
-            update_data["resolved_at"] = datetime.utcnow()
+            update_data["resolved_at"] = pendency.get("resolved_at") or confirmed_at
 
         mongo["pendencies"].update_one(
             {"_id": ObjectId(pendency_id)}, {"$set": update_data}

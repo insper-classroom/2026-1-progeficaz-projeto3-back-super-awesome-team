@@ -8,3 +8,5 @@ class PendencySchema(Schema):
     value = fields.Float(required=True, validate=validate.Range(min=0.01))
     debtor_confirmed = fields.Bool(required=False, load_default=False)
     creditor_confirmed = fields.Bool(required=False, load_default=False)
+    debtor_confirmed_at = fields.DateTime(required=False, allow_none=True)
+    creditor_confirmed_at = fields.DateTime(required=False, allow_none=True)

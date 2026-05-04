@@ -10,6 +10,7 @@ class Bill:
         members_to_pay,
         created_by,
         is_paid=False,
+        due_date=None,
     ):
         if not bill_type:
             raise ValueError("Tipo de conta é obrigatório")
@@ -28,6 +29,7 @@ class Bill:
         self.members_to_pay = members_to_pay
         self.created_by = created_by
         self.is_paid = is_paid
+        self.due_date = due_date
         self.created_at = datetime.utcnow()
 
     def to_dictionary(self):
@@ -38,5 +40,6 @@ class Bill:
             "members_to_pay": self.members_to_pay,
             "created_by": self.created_by,
             "is_paid": self.is_paid,
+            "due_date": self.due_date,
             "created_at": self.created_at,
         }

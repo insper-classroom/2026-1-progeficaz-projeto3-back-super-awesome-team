@@ -107,12 +107,16 @@ def test_create_bill_ok():
         }.get
         mock_pendencies.return_value = (["pend_id_1"], None)
 
-        result, error = create_bill_service(BILL_PAYLOAD, "creator@example.com")
+        payload = {**BILL_PAYLOAD, "due_date": "2026-06-10T00:00:00"}
+
+        result, error = create_bill_service(payload, "creator@example.com")
 
         assert error is None
         assert result["message"] == "Conta criada com sucesso"
         assert "bill_id" in result
         assert result["pendencies_created"] == 1
+        inserted_bill = bills_col.insert_one.call_args.args[0]
+        assert inserted_bill["due_date"] == "2026-06-10T00:00:00"
 
 
 def test_create_bill_pendency_error_rolls_back():
@@ -407,5 +411,7 @@ def test_mark_bill_as_paid_ok():
         assert update_query == {"bill_id": BILL_ID}
         assert update_data["$set"]["debtor_confirmed"] is True
         assert update_data["$set"]["creditor_confirmed"] is True
+        assert "debtor_confirmed_at" in update_data["$set"]
+        assert "creditor_confirmed_at" in update_data["$set"]
         assert update_data["$set"]["is_resolved"] is True
         assert "resolved_at" in update_data["$set"]

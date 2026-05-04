@@ -14,3 +14,4 @@ class BillSchema(Schema):
         fields.Nested(MemberToPaySchema), required=True, validate=validate.Length(min=1)
     )
     is_paid = fields.Bool(required=False, load_default=False)
+    due_date = fields.DateTime(required=False, allow_none=True)

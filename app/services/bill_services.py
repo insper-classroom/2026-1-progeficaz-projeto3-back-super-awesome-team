@@ -34,6 +34,7 @@ def create_bill_service(data, created_by):
             data["members_to_pay"],
             created_by,
             data.get("is_paid", False),
+            data.get("due_date"),
         )
         result = mongo["bills"].insert_one(bill.to_dictionary())
         bill_id = str(result.inserted_id)
@@ -138,6 +139,8 @@ def update_bill_service(bill_id, data, user_email):
             update_data["bill_type"] = data["bill_type"]
         if "total_value" in data:
             update_data["total_value"] = data["total_value"]
+        if "due_date" in data:
+            update_data["due_date"] = data["due_date"]
 
         # Se houver mudança em members_to_pay, atualiza as pendências
         if "members_to_pay" in data:
@@ -222,6 +225,8 @@ def mark_bill_as_paid_service(bill_id, user_email):
                 "$set": {
                     "debtor_confirmed": True,
                     "creditor_confirmed": True,
+                    "debtor_confirmed_at": resolved_at,
+                    "creditor_confirmed_at": resolved_at,
                     "is_resolved": True,
                     "resolved_at": resolved_at,
                 }
