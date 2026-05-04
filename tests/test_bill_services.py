@@ -385,13 +385,27 @@ def test_mark_bill_as_paid_not_creator():
 
 def test_mark_bill_as_paid_ok():
     with patch("app.services.bill_services.mongo") as mock_mongo:
-        mock_mongo.__getitem__.return_value.find_one.return_value = {
+        bills_col = MagicMock()
+        bills_col.find_one.return_value = {
             **BILL_DOC,
             "_id": OBJ_BILL_ID,
         }
+        pendencies_col = MagicMock()
+        mock_mongo.__getitem__.side_effect = {
+            "bills": bills_col,
+            "pendencies": pendencies_col,
+        }.get
 
         result, error = mark_bill_as_paid_service(BILL_ID, "creator@example.com")
 
         assert error is None
-        assert result == {"message": "Conta marcada como paga"}
-        mock_mongo.__getitem__.return_value.update_one.assert_called_once()
+        assert result == {"message": "Conta marcada como paga e pendências resolvidas"}
+        bills_col.update_one.assert_called_once()
+        pendencies_col.update_many.assert_called_once()
+
+        update_query, update_data = pendencies_col.update_many.call_args.args
+        assert update_query == {"bill_id": BILL_ID}
+        assert update_data["$set"]["debtor_confirmed"] is True
+        assert update_data["$set"]["creditor_confirmed"] is True
+        assert update_data["$set"]["is_resolved"] is True
+        assert "resolved_at" in update_data["$set"]
