@@ -322,10 +322,21 @@ def test_delete_group_not_creator():
         assert error == {"error": "Apenas o criador do grupo pode deletá-lo"}
 
 
+def test_delete_group_with_other_members():
+    with patch("app.services.group_services.mongo") as mock_mongo:
+        mock_mongo.__getitem__.return_value.find_one.return_value = dict(GROUP_DOC)
+
+        result, error = delete_group_service(GROUP_ID, "creator@example.com")
+
+        assert result is None
+        assert "outros membros" in error["error"]
+
+
 def test_delete_group_ok():
     with patch("app.services.group_services.mongo") as mock_mongo:
+        solo_group = {**GROUP_DOC, "_id": OBJ_GROUP_ID, "members": ["creator@example.com"]}
         groups_col = MagicMock()
-        groups_col.find_one.return_value = {**GROUP_DOC, "_id": OBJ_GROUP_ID}
+        groups_col.find_one.return_value = solo_group
         bills_col = MagicMock()
         bills_col.find.return_value.distinct.return_value = []
         pendencies_col = MagicMock()

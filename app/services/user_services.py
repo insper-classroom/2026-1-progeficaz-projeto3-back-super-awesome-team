@@ -119,10 +119,6 @@ def delete_user_service(user_email, data):
         return None, {"error": "Usuário não encontrado"}
 
     if user.get("auth_provider") != "google":
-        erros = delete_schema.validate(data)
-        if erros:
-            return None, erros
-
         stored_password = user.get("password")
         if stored_password:
             supplied = (data or {}).get("password")
