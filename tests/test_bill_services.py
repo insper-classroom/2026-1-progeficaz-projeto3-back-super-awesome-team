@@ -5,6 +5,7 @@ from app.services.bill_services import (
     create_bill_service,
     get_user_bills_service,
     get_group_bills_service,
+    get_group_bills_heatmap_service,
     get_bill_service,
     update_bill_service,
     delete_bill_service,
@@ -221,6 +222,119 @@ def test_get_group_bills_ok():
         assert error is None
         assert len(result) == 1
         assert result[0]["_id"] == BILL_ID
+
+
+def test_get_group_bills_with_search_status_and_month_filters():
+    other_bill_id = ObjectId("507f1f77bcf86cd799439013")
+    with patch("app.services.bill_services.mongo") as mock_mongo:
+        bill_docs = [
+            {
+                **BILL_DOC,
+                "_id": OBJ_BILL_ID,
+                "bill_type": "Mercado",
+                "due_date": "2026-05-10T00:00:00",
+                "created_at": "2026-05-01T09:00:00",
+                "is_paid": False,
+            },
+            {
+                **BILL_DOC,
+                "_id": other_bill_id,
+                "bill_type": "Internet",
+                "due_date": "2026-06-10T00:00:00",
+                "created_at": "2026-06-01T09:00:00",
+                "is_paid": False,
+            },
+        ]
+        groups_col = MagicMock()
+        groups_col.find_one.return_value = dict(GROUP_DOC)
+        bills_col = MagicMock()
+        bills_col.find.return_value = bill_docs
+        mock_mongo.__getitem__.side_effect = {
+            "groups": groups_col,
+            "bills": bills_col,
+        }.get
+
+        result, error = get_group_bills_service(
+            GROUP_ID,
+            "creator@example.com",
+            {"search": "mercado", "status": "abertas", "month": "2026-05"},
+        )
+
+        assert error is None
+        assert len(result) == 1
+        assert result[0]["_id"] == BILL_ID
+
+
+def test_get_group_bills_invalid_status_filter():
+    with patch("app.services.bill_services.mongo") as mock_mongo:
+        groups_col = MagicMock()
+        groups_col.find_one.return_value = dict(GROUP_DOC)
+        bills_col = MagicMock()
+        bills_col.find.return_value = [{**BILL_DOC, "_id": OBJ_BILL_ID}]
+        mock_mongo.__getitem__.side_effect = {
+            "groups": groups_col,
+            "bills": bills_col,
+        }.get
+
+        result, error = get_group_bills_service(
+            GROUP_ID,
+            "creator@example.com",
+            {"status": "desconhecido"},
+        )
+
+        assert result is None
+        assert error == {"error": "Filtro de status inválido"}
+
+
+def test_get_group_bills_heatmap_ok():
+    second_bill_id = ObjectId("507f1f77bcf86cd799439013")
+    third_bill_id = ObjectId("507f1f77bcf86cd799439014")
+    with patch("app.services.bill_services.mongo") as mock_mongo:
+        bill_docs = [
+            {
+                **BILL_DOC,
+                "_id": OBJ_BILL_ID,
+                "total_value": 100.0,
+                "created_at": "2026-05-02T09:00:00",
+            },
+            {
+                **BILL_DOC,
+                "_id": second_bill_id,
+                "total_value": 50.0,
+                "created_at": "2026-05-02T18:00:00",
+            },
+            {
+                **BILL_DOC,
+                "_id": third_bill_id,
+                "total_value": 200.0,
+                "created_at": "2026-05-03T09:00:00",
+            },
+        ]
+        groups_col = MagicMock()
+        groups_col.find_one.return_value = dict(GROUP_DOC)
+        bills_col = MagicMock()
+        bills_col.find.return_value = bill_docs
+        mock_mongo.__getitem__.side_effect = {
+            "groups": groups_col,
+            "bills": bills_col,
+        }.get
+
+        result, error = get_group_bills_heatmap_service(
+            GROUP_ID, "creator@example.com", "2026-05"
+        )
+
+        day_two = next(cell for cell in result["cells"] if cell.get("day") == 2)
+        day_three = next(cell for cell in result["cells"] if cell.get("day") == 3)
+
+        assert error is None
+        assert result["month"] == "2026-05"
+        assert result["total_month"] == 350.0
+        assert result["highest_day"] == 3
+        assert result["highest_value"] == 200.0
+        assert result["days_with_bills"] == 2
+        assert day_two["value"] == 150.0
+        assert day_two["level"] == 3
+        assert day_three["level"] == 4
 
 
 def test_get_bill_not_found():
