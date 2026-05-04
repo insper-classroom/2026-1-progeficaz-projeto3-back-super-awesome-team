@@ -272,6 +272,22 @@ Se o frontend enviar `password`, também precisa enviar `current_password`.
 
 O backend adiciona automaticamente o e-mail do usuário logado em `members` se ele não estiver na lista.
 
+### Meta
+
+| Fluxo                     | Endpoint                             | O que o frontend precisa enviar                                             | O que o frontend precisa capturar |
+| ------------------------- | ------------------------------------ | --------------------------------------------------------------------------- | --------------------------------- |
+| Criar meta                | `POST /goal`                         | `name`, `target_value`, `group_id`, opcionais `due_date`, `description`, `icon`, `members`, `current_value` | `goal_id`                         |
+| Listar minhas metas       | `GET /goal`                          | Nenhum body + JWT                                                           | `goals`                           |
+| Listar metas do grupo     | `GET /group/<group_id>/goal`         | Apenas o id do grupo na URL + JWT                                           | `goals`                           |
+| Buscar meta por ID        | `GET /goal/<goal_id>`                | Apenas o id na URL + JWT                                                    | Meta completa                     |
+| Atualizar meta            | `PUT /goal/<goal_id>`                | Campos a alterar + JWT                                                      | Meta atualizada                   |
+| Deletar meta              | `DELETE /goal/<goal_id>`             | Apenas o id na URL + JWT                                                    | Mensagem de sucesso               |
+| Registrar aporte na meta  | `POST /goal/<goal_id>/contribution`  | `value`, opcionalmente `member_email` e `contributed_at`                    | Meta atualizada                   |
+
+`members` deve ser uma lista de e-mails de membros do grupo. Se omitido, a meta vale para todos os membros do grupo.
+`due_date` deve ser enviado em formato de data aceito pelo backend, por exemplo `2026-12-31`.
+`contributed_at` deve ser enviado em formato de data/hora aceito pelo backend, por exemplo `2026-05-04T10:00:00Z`.
+
 ### Despesa
 
 | Fluxo                      | Endpoint                       | O que o frontend precisa enviar                                | O que o frontend precisa capturar |

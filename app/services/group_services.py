@@ -160,6 +160,9 @@ def delete_group_service(group_id, user_email):
         # Deleta todas as bills do grupo
         mongo["bills"].delete_many({"group_id": group_id})
 
+        # Deleta todas as metas do grupo
+        mongo["goals"].delete_many({"group_id": group_id})
+
         # Deleta o grupo
         mongo["groups"].delete_one({"_id": ObjectId(group_id)})
 
