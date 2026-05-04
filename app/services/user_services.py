@@ -118,23 +118,20 @@ def delete_user_service(user_email, data):
     if not user:
         return None, {"error": "Usuário não encontrado"}
 
-    if user.get("auth_provider") == "google":
-        mongo["users"].delete_one({"_id": user["_id"]})
-        return {"message": "Usuário deletado com sucesso"}, None
+    if user.get("auth_provider") != "google":
+        erros = delete_schema.validate(data)
+        if erros:
+            return None, erros
 
-    erros = delete_schema.validate(data)
-    if erros:
-        return None, erros
-
-    stored_password = user.get("password")
-    if stored_password:
-        supplied = (data or {}).get("password")
-        if not supplied:
-            return None, {"error": "Senha é obrigatória"}
-        if not bcrypt.checkpw(
-            supplied.encode("utf-8"), stored_password.encode("utf-8")
-        ):
-            return None, {"error": "Senha incorreta"}
+        stored_password = user.get("password")
+        if stored_password:
+            supplied = (data or {}).get("password")
+            if not supplied:
+                return None, {"error": "Senha é obrigatória"}
+            if not bcrypt.checkpw(
+                supplied.encode("utf-8"), stored_password.encode("utf-8")
+            ):
+                return None, {"error": "Senha incorreta"}
 
     if mongo["groups"].count_documents({"created_by": user_email}) > 0:
         return None, {
@@ -154,9 +151,6 @@ def delete_user_service(user_email, data):
         }
 
     mongo["expenses"].delete_many({"user_email": user_email})
-    mongo["pendencies"].delete_many(
-        {"$or": [{"debtor_email": user_email}, {"creditor_email": user_email}]}
-    )
     mongo["groups"].update_many(
         {"members": user_email}, {"$pull": {"members": user_email}}
     )

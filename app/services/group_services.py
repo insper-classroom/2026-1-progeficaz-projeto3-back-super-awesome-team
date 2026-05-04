@@ -88,13 +88,11 @@ def update_group_service(group_id, data, user_email):
         if not group:
             return None, {"error": "Grupo não encontrado"}
 
-        # Valida se o usuário é membro do grupo
-        if user_email not in group["members"]:
-            return None, {"error": "Você não é membro deste grupo"}
+        if group["created_by"] != user_email:
+            return None, {"error": "Apenas o criador do grupo pode editá-lo"}
 
         update_data = {}
 
-        # Atualiza nome e descrição se fornecidos
         if "name" in data:
             update_data["name"] = data["name"]
         if "description" in data:
@@ -102,7 +100,14 @@ def update_group_service(group_id, data, user_email):
         if "image" in data:
             update_data["image"] = data["image"]
 
-        # Processa adição e remoção de membros
+        if "created_by" in data:
+            new_owner_email = data["created_by"]
+            if new_owner_email == user_email:
+                return None, {"error": "O novo dono deve ser diferente do dono atual"}
+            if new_owner_email not in group.get("members", []):
+                return None, {"error": "O novo dono deve ser membro do grupo"}
+            update_data["created_by"] = new_owner_email
+
         if "members" in data:
             new_members_list = data["members"]
             current_members = group["members"]
@@ -170,6 +175,11 @@ def delete_group_service(group_id, user_email):
         # Apenas o criador pode deletar o grupo
         if group["created_by"] != user_email:
             return None, {"error": "Apenas o criador do grupo pode deletá-lo"}
+
+        if len(group.get("members", [])) > 1:
+            return None, {
+                "error": "Não é possível deletar o grupo: transfira a propriedade ou remova todos os outros membros antes."
+            }
 
         # Deleta todas as pendencies associadas às bills do grupo
         bills_ids = list(
