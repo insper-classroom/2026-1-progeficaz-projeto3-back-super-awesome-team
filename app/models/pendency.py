@@ -10,6 +10,8 @@ class Pendency:
         value,
         debtor_confirmed=False,
         creditor_confirmed=False,
+        debtor_confirmed_at=None,
+        creditor_confirmed_at=None,
     ):
         if not bill_id:
             raise ValueError("Bill ID é obrigatório")
@@ -28,6 +30,8 @@ class Pendency:
         self.value = value
         self.debtor_confirmed = debtor_confirmed
         self.creditor_confirmed = creditor_confirmed
+        self.debtor_confirmed_at = debtor_confirmed_at
+        self.creditor_confirmed_at = creditor_confirmed_at
         self.is_resolved = False
         self.created_at = datetime.utcnow()
         self.resolved_at = None
@@ -40,6 +44,8 @@ class Pendency:
             "value": self.value,
             "debtor_confirmed": self.debtor_confirmed,
             "creditor_confirmed": self.creditor_confirmed,
+            "debtor_confirmed_at": self.debtor_confirmed_at,
+            "creditor_confirmed_at": self.creditor_confirmed_at,
             "is_resolved": self.is_resolved,
             "created_at": self.created_at,
             "resolved_at": self.resolved_at,

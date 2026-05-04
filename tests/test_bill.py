@@ -201,10 +201,15 @@ def test_delete_bill_forbidden(mock_service, client, auth_headers):
 
 @patch("app.routes.bill.mark_bill_as_paid_service")
 def test_mark_bill_as_paid_ok(mock_service, client, auth_headers):
-    mock_service.return_value = ({"message": "Conta marcada como paga"}, None)
+    mock_service.return_value = (
+        {"message": "Conta marcada como paga e pendências resolvidas"},
+        None,
+    )
     response = client.put(f"/bill/{BILL_ID}/mark-as-paid", headers=auth_headers)
     assert response.status_code == 200
-    assert response.get_json() == {"message": "Conta marcada como paga"}
+    assert response.get_json() == {
+        "message": "Conta marcada como paga e pendências resolvidas"
+    }
 
 
 @patch("app.routes.bill.mark_bill_as_paid_service")

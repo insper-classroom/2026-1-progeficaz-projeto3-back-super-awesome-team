@@ -6,6 +6,30 @@ from bson.objectid import ObjectId
 schema = GroupSchema()
 
 
+def _serialize_group(group):
+    doc = dict(group)
+    doc["_id"] = str(doc["_id"])
+
+    members = doc.get("members", []) or []
+    users = list(
+        mongo["users"].find(
+            {"email": {"$in": members}},
+            {"email": 1, "name": 1, "image": 1},
+        )
+    )
+    users_by_email = {user.get("email"): user for user in users if user.get("email")}
+    doc["member_details"] = [
+        {
+            "email": member_email,
+            "name": users_by_email.get(member_email, {}).get("name") or member_email,
+            "image": users_by_email.get(member_email, {}).get("image"),
+        }
+        for member_email in members
+    ]
+
+    return doc
+
+
 def create_group_service(data, user_email):
     erros = schema.validate(data)
     if erros:
@@ -38,9 +62,7 @@ def create_group_service(data, user_email):
 def get_user_groups_service(user_email):
     try:
         groups = list(mongo["groups"].find({"members": user_email}))
-        for group in groups:
-            group["_id"] = str(group["_id"])
-        return groups, None
+        return [_serialize_group(group) for group in groups], None
     except Exception as e:
         return None, {"error": str(e)}
 
@@ -55,8 +77,7 @@ def get_group_service(group_id, user_email):
         if user_email not in group["members"]:
             return None, {"error": "Você não é membro deste grupo"}
 
-        group["_id"] = str(group["_id"])
-        return group, None
+        return _serialize_group(group), None
     except Exception as e:
         return None, {"error": str(e)}
 
@@ -131,11 +152,10 @@ def update_group_service(group_id, data, user_email):
 
         # Retorna o grupo atualizado
         updated_group = mongo["groups"].find_one({"_id": ObjectId(group_id)})
-        updated_group["_id"] = str(updated_group["_id"])
 
         return {
             "message": "Grupo atualizado com sucesso",
-            "group": updated_group,
+            "group": _serialize_group(updated_group),
         }, None
     except Exception as e:
         return None, {"error": str(e)}
