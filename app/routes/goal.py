@@ -7,6 +7,7 @@ from ..services import (
     get_goal_service,
     get_group_goals_service,
     get_user_goals_service,
+    update_goal_contribution_service,
     update_goal_service,
 )
 from ..utils import http_status_for_service_error, jwt_required
@@ -78,3 +79,15 @@ def add_goal_contribution(goal_id):
     if error:
         return jsonify(error), http_status_for_service_error(error)
     return jsonify(result), 201
+
+
+@goal_bp.route("/goal/<goal_id>/contribution/<int:contribution_index>", methods=["PUT"])
+@jwt_required
+def update_goal_contribution(goal_id, contribution_index):
+    data = request.get_json() or {}
+    result, error = update_goal_contribution_service(
+        goal_id, contribution_index, data, request.current_user
+    )
+    if error:
+        return jsonify(error), http_status_for_service_error(error)
+    return jsonify(result), 200

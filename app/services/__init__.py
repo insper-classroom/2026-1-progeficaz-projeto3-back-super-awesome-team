@@ -51,6 +51,7 @@ from .goal_services import (
     get_goal_service,
     get_group_goals_service,
     get_user_goals_service,
+    update_goal_contribution_service,
     update_goal_service,
 )
 
@@ -96,4 +97,5 @@ __all__ = [
     "update_goal_service",
     "delete_goal_service",
     "add_goal_contribution_service",
+    "update_goal_contribution_service",
 ]

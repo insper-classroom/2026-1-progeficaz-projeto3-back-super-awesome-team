@@ -222,3 +222,61 @@ def add_goal_contribution_service(goal_id, data, user_email):
         }, None
     except Exception as e:
         return None, {"error": str(e)}
+
+
+def update_goal_contribution_service(goal_id, contribution_index, data, user_email):
+    errors = contribution_schema.validate(data)
+    if errors:
+        return None, errors
+
+    try:
+        goal, group, error = _get_goal_for_member(goal_id, user_email)
+        if error:
+            return None, error
+
+        contributions = goal.get("contributions") or []
+        if contribution_index < 0 or contribution_index >= len(contributions):
+            return None, {"error": "Aporte não encontrado"}
+
+        current_contribution = contributions[contribution_index]
+        member_email = data.get(
+            "member_email", current_contribution.get("member_email", user_email)
+        )
+
+        if member_email not in group["members"]:
+            return None, {"error": f"Membro {member_email} não pertence ao grupo"}
+        if member_email not in goal["members"]:
+            return None, {"error": f"Membro {member_email} não pertence à meta"}
+
+        current_value = current_contribution.get("value", 0)
+        new_value = data["value"]
+        updated_at = datetime.utcnow()
+        contribution = {
+            **current_contribution,
+            "member_email": member_email,
+            "value": new_value,
+            "contributed_at": data.get("contributed_at")
+            or current_contribution.get("contributed_at")
+            or updated_at,
+            "updated_by": user_email,
+            "updated_at": updated_at,
+        }
+
+        mongo["goals"].update_one(
+            {"_id": ObjectId(goal_id)},
+            {
+                "$set": {
+                    f"contributions.{contribution_index}": contribution,
+                    "updated_at": updated_at,
+                },
+                "$inc": {"current_value": new_value - current_value},
+            },
+        )
+
+        updated_goal = mongo["goals"].find_one({"_id": ObjectId(goal_id)})
+        return {
+            "message": "Aporte atualizado com sucesso",
+            "goal": _serialize_goal(updated_goal),
+        }, None
+    except Exception as e:
+        return None, {"error": str(e)}
