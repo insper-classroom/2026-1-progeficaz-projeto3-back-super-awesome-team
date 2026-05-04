@@ -1,4 +1,17 @@
 import pytest
+import os
+
+os.environ.update(
+    {
+        "FRONTEND_AUTH_CALLBACK_URL": "",
+        "FRONTEND_EMAIL_VERIFIED_URL": "",
+        "FRONTEND_URL": "",
+        "JWT_SECRET_KEY": "test-jwt-secret-key-with-at-least-32-bytes",
+        "MONGODB_URI": "mongodb://localhost:27017",
+        "SECRET_KEY": "test-secret-key",
+    }
+)
+
 from app import create_app
 from app.utils.jwt_utils import generate_token
 
