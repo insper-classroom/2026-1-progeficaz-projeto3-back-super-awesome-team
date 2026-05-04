@@ -174,6 +174,29 @@ def test_get_group_ok():
         assert result["_id"] == GROUP_ID
 
 
+def test_get_group_includes_member_details():
+    with patch("app.services.group_services.mongo") as mock_mongo:
+        groups_col = MagicMock()
+        groups_col.find_one.return_value = {**GROUP_DOC, "_id": OBJ_GROUP_ID}
+        users_col = MagicMock()
+        users_col.find.return_value = [
+            {"email": "creator@example.com", "name": "Creator User"},
+            {"email": "member@example.com", "name": "Member User"},
+        ]
+        mock_mongo.__getitem__.side_effect = {
+            "groups": groups_col,
+            "users": users_col,
+        }.get
+
+        result, error = get_group_service(GROUP_ID, "creator@example.com")
+
+        assert error is None
+        assert result["member_details"] == [
+            {"email": "creator@example.com", "name": "Creator User", "image": None},
+            {"email": "member@example.com", "name": "Member User", "image": None},
+        ]
+
+
 def test_update_group_image_ok():
     with patch("app.services.group_services.mongo") as mock_mongo:
         doc = {**GROUP_DOC, "_id": OBJ_GROUP_ID}
