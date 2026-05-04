@@ -262,10 +262,12 @@ def test_delete_group_ok():
         bills_col = MagicMock()
         bills_col.find.return_value.distinct.return_value = []
         pendencies_col = MagicMock()
+        goals_col = MagicMock()
         mock_mongo.__getitem__.side_effect = {
             "groups": groups_col,
             "bills": bills_col,
             "pendencies": pendencies_col,
+            "goals": goals_col,
         }.get
 
         result, error = delete_group_service(GROUP_ID, "creator@example.com")
@@ -274,4 +276,5 @@ def test_delete_group_ok():
         assert result == {
             "message": "Grupo e seus dados associados foram deletados com sucesso"
         }
+        goals_col.delete_many.assert_called_once_with({"group_id": GROUP_ID})
         groups_col.delete_one.assert_called_once()
