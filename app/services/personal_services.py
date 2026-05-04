@@ -45,7 +45,7 @@ def _month_key(value):
 def _build_expenses_by_category(expenses):
     totals = defaultdict(float)
     for expense in expenses:
-        category = expense.get("expense_type") or "Sem categoria"
+        category = expense.get("category") or "Sem categoria"
         totals[category] += _to_number(expense.get("value"))
 
     total = sum(totals.values())
@@ -91,7 +91,7 @@ def _build_monthly_flow(expenses, contributions):
     months = defaultdict(lambda: {"month": "", "expenses": 0.0, "contributions": 0.0})
 
     for expense in expenses:
-        month = _month_key(expense.get("expense_date"))
+        month = _month_key(expense.get("date"))
         months[month]["month"] = month
         months[month]["expenses"] += _to_number(expense.get("value"))
 
@@ -141,9 +141,58 @@ def _extract_user_contributions(goals, groups_by_id, user_email):
     )
 
 
+def _get_pendency_date(pendency, bill):
+    return (
+        pendency.get("resolved_at")
+        or pendency.get("creditor_confirmed_at")
+        or pendency.get("debtor_confirmed_at")
+        or bill.get("created_at")
+    )
+
+
+def _extract_confirmed_group_expenses(pendencies, bills_by_id, groups_by_id, user_email):
+    expenses = []
+
+    for pendency in pendencies:
+        bill_id = str(pendency.get("bill_id"))
+        bill = bills_by_id.get(bill_id)
+        if not bill:
+            continue
+
+        group_id = str(bill.get("group_id"))
+        group = groups_by_id.get(group_id, {})
+        role = "creditor" if pendency.get("creditor_email") == user_email else "debtor"
+        date = _get_pendency_date(pendency, bill)
+
+        expenses.append(
+            _serialize(
+                {
+                    "_id": pendency.get("_id"),
+                    "bill_id": bill_id,
+                    "group_id": group_id,
+                    "group_name": group.get("name"),
+                    "category": bill.get("bill_type") or "Sem categoria",
+                    "value": _to_number(pendency.get("value")),
+                    "date": date,
+                    "role": role,
+                    "debtor_email": pendency.get("debtor_email"),
+                    "creditor_email": pendency.get("creditor_email"),
+                    "debtor_confirmed_at": pendency.get("debtor_confirmed_at"),
+                    "creditor_confirmed_at": pendency.get("creditor_confirmed_at"),
+                    "resolved_at": pendency.get("resolved_at"),
+                }
+            )
+        )
+
+    return sorted(
+        expenses,
+        key=lambda item: _date_key(item.get("date")),
+        reverse=True,
+    )
+
+
 def get_personal_summary_service(user_email):
     try:
-        expenses = list(mongo["expenses"].find({"user_email": user_email}))
         groups = list(
             mongo["groups"].find(
                 {"members": user_email},
@@ -157,32 +206,67 @@ def get_personal_summary_service(user_email):
         if group_ids:
             goals = list(mongo["goals"].find({"group_id": {"$in": group_ids}}))
 
-        serialized_expenses = sorted(
-            (_serialize(deepcopy(expense)) for expense in expenses),
-            key=lambda item: _date_key(item.get("expense_date")),
-            reverse=True,
-        )
-        contributions = _extract_user_contributions(goals, groups_by_id, user_email)
+        bills = []
+        pendencies = []
+        if group_ids:
+            bills = list(mongo["bills"].find({"group_id": {"$in": group_ids}}))
+            bill_ids = [str(bill["_id"]) for bill in bills]
+            if bill_ids:
+                pendencies = list(
+                    mongo["pendencies"].find(
+                        {
+                            "bill_id": {"$in": bill_ids},
+                            "is_resolved": True,
+                            "$or": [
+                                {"debtor_email": user_email},
+                                {"creditor_email": user_email},
+                            ],
+                        }
+                    )
+                )
 
-        total_expenses = sum(_to_number(expense.get("value")) for expense in expenses)
+        bills_by_id = {str(bill["_id"]): bill for bill in bills}
+        contributions = _extract_user_contributions(goals, groups_by_id, user_email)
+        group_expenses = _extract_confirmed_group_expenses(
+            pendencies,
+            bills_by_id,
+            groups_by_id,
+            user_email,
+        )
+
+        total_expenses = sum(
+            _to_number(expense.get("value")) for expense in group_expenses
+        )
+        total_paid = sum(
+            _to_number(expense.get("value"))
+            for expense in group_expenses
+            if expense.get("role") == "debtor"
+        )
+        total_received = sum(
+            _to_number(expense.get("value"))
+            for expense in group_expenses
+            if expense.get("role") == "creditor"
+        )
         total_contributions = sum(
             _to_number(contribution.get("value")) for contribution in contributions
         )
 
         return {
-            "expenses": serialized_expenses,
+            "expenses": group_expenses,
             "contributions": contributions,
             "summary": {
                 "total_expenses": round(total_expenses, 2),
+                "total_paid": round(total_paid, 2),
+                "total_received": round(total_received, 2),
                 "total_contributions": round(total_contributions, 2),
-                "balance": round(total_contributions - total_expenses, 2),
-                "expense_count": len(serialized_expenses),
+                "expense_count": len(group_expenses),
                 "contribution_count": len(contributions),
+                "group_count": len(groups),
             },
             "charts": {
-                "expenses_by_category": _build_expenses_by_category(expenses),
+                "expenses_by_category": _build_expenses_by_category(group_expenses),
                 "contributions_by_goal": _build_contributions_by_goal(contributions),
-                "monthly_flow": _build_monthly_flow(expenses, contributions),
+                "monthly_flow": _build_monthly_flow(group_expenses, contributions),
             },
         }, None
     except Exception as e:

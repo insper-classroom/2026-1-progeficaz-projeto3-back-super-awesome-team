@@ -8,38 +8,24 @@ USER_EMAIL = "test@example.com"
 OTHER_EMAIL = "other@example.com"
 GROUP_ID = ObjectId("507f1f77bcf86cd799439012")
 GOAL_ID = ObjectId("507f1f77bcf86cd799439011")
-EXPENSE_ID = ObjectId("507f1f77bcf86cd799439010")
+BILL_ID = ObjectId("507f1f77bcf86cd799439010")
+SECOND_BILL_ID = ObjectId("507f1f77bcf86cd799439013")
+PENDENCY_ID = ObjectId("507f1f77bcf86cd799439014")
+SECOND_PENDENCY_ID = ObjectId("507f1f77bcf86cd799439015")
 
 
-def _make_mongo(expenses_col, groups_col, goals_col):
+def _make_mongo(groups_col, goals_col, bills_col, pendencies_col):
     mock_mongo = MagicMock()
     mock_mongo.__getitem__.side_effect = {
-        "expenses": expenses_col,
         "groups": groups_col,
         "goals": goals_col,
+        "bills": bills_col,
+        "pendencies": pendencies_col,
     }.get
     return mock_mongo
 
 
-def test_get_personal_summary_aggregates_expenses_and_user_contributions():
-    expenses_col = MagicMock()
-    expenses_col.find.return_value = [
-        {
-            "_id": EXPENSE_ID,
-            "expense_type": "Alimentação",
-            "value": 80.0,
-            "user_email": USER_EMAIL,
-            "expense_date": "2026-05-01T12:00:00Z",
-        },
-        {
-            "_id": ObjectId("507f1f77bcf86cd799439013"),
-            "expense_type": "Transporte",
-            "value": 40.0,
-            "user_email": USER_EMAIL,
-            "expense_date": "2026-05-02T12:00:00Z",
-        },
-    ]
-
+def test_get_personal_summary_aggregates_confirmed_group_expenses_and_user_contributions():
     groups_col = MagicMock()
     groups_col.find.return_value = [
         {
@@ -69,18 +55,64 @@ def test_get_personal_summary_aggregates_expenses_and_user_contributions():
         }
     ]
 
+    bills_col = MagicMock()
+    bills_col.find.return_value = [
+        {
+            "_id": BILL_ID,
+            "bill_type": "Alimentação",
+            "group_id": str(GROUP_ID),
+            "total_value": 200.0,
+            "created_by": OTHER_EMAIL,
+            "created_at": "2026-05-01T12:00:00Z",
+        },
+        {
+            "_id": SECOND_BILL_ID,
+            "bill_type": "Transporte",
+            "group_id": str(GROUP_ID),
+            "total_value": 90.0,
+            "created_by": USER_EMAIL,
+            "created_at": "2026-05-02T12:00:00Z",
+        },
+    ]
+
+    pendencies_col = MagicMock()
+    pendencies_col.find.return_value = [
+        {
+            "_id": PENDENCY_ID,
+            "bill_id": str(BILL_ID),
+            "debtor_email": USER_EMAIL,
+            "creditor_email": OTHER_EMAIL,
+            "value": 80.0,
+            "is_resolved": True,
+            "resolved_at": "2026-05-04T12:00:00Z",
+        },
+        {
+            "_id": SECOND_PENDENCY_ID,
+            "bill_id": str(SECOND_BILL_ID),
+            "debtor_email": OTHER_EMAIL,
+            "creditor_email": USER_EMAIL,
+            "value": 40.0,
+            "is_resolved": True,
+            "resolved_at": "2026-05-03T12:00:00Z",
+        },
+    ]
+
     with patch(
         "app.services.personal_services.mongo",
-        _make_mongo(expenses_col, groups_col, goals_col),
+        _make_mongo(groups_col, goals_col, bills_col, pendencies_col),
     ):
         result, error = get_personal_summary_service(USER_EMAIL)
 
     assert error is None
     assert result["summary"]["total_expenses"] == 120.0
+    assert result["summary"]["total_paid"] == 80.0
+    assert result["summary"]["total_received"] == 40.0
     assert result["summary"]["total_contributions"] == 50.0
-    assert result["summary"]["balance"] == -70.0
     assert len(result["expenses"]) == 2
     assert len(result["contributions"]) == 1
+    assert result["expenses"][0]["category"] == "Alimentação"
+    assert result["expenses"][0]["group_name"] == "Casa"
+    assert result["expenses"][0]["role"] == "debtor"
     assert result["contributions"][0]["goal_name"] == "Reserva"
     assert result["contributions"][0]["group_name"] == "Casa"
     assert result["charts"]["expenses_by_category"][0]["name"] == "Alimentação"
@@ -91,20 +123,21 @@ def test_get_personal_summary_aggregates_expenses_and_user_contributions():
 
 
 def test_get_personal_summary_without_groups_skips_goal_lookup():
-    expenses_col = MagicMock()
-    expenses_col.find.return_value = []
     groups_col = MagicMock()
     groups_col.find.return_value = []
     goals_col = MagicMock()
+    bills_col = MagicMock()
+    pendencies_col = MagicMock()
 
     with patch(
         "app.services.personal_services.mongo",
-        _make_mongo(expenses_col, groups_col, goals_col),
+        _make_mongo(groups_col, goals_col, bills_col, pendencies_col),
     ):
         result, error = get_personal_summary_service(USER_EMAIL)
 
     assert error is None
     assert result["expenses"] == []
     assert result["contributions"] == []
-    assert result["summary"]["balance"] == 0
     goals_col.find.assert_not_called()
+    bills_col.find.assert_not_called()
+    pendencies_col.find.assert_not_called()

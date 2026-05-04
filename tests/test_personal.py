@@ -17,10 +17,12 @@ def test_get_personal_summary_ok(mock_service, client, auth_headers):
             "contributions": [],
             "summary": {
                 "total_expenses": 0,
+                "total_paid": 0,
+                "total_received": 0,
                 "total_contributions": 0,
-                "balance": 0,
                 "expense_count": 0,
                 "contribution_count": 0,
+                "group_count": 0,
             },
             "charts": {
                 "expenses_by_category": [],
@@ -34,7 +36,7 @@ def test_get_personal_summary_ok(mock_service, client, auth_headers):
     response = client.get("/personal/summary", headers=auth_headers)
 
     assert response.status_code == 200
-    assert response.get_json()["summary"]["balance"] == 0
+    assert response.get_json()["summary"]["total_expenses"] == 0
     mock_service.assert_called_once_with(USER_EMAIL)
 
 
