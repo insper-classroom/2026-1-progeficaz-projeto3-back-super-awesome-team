@@ -44,6 +44,15 @@ from .expense_services import (
     update_expense_service,
     delete_expense_service,
 )
+from .goal_services import (
+    add_goal_contribution_service,
+    create_goal_service,
+    delete_goal_service,
+    get_goal_service,
+    get_group_goals_service,
+    get_user_goals_service,
+    update_goal_service,
+)
 
 __all__ = [
     "login_service",
@@ -80,4 +89,11 @@ __all__ = [
     "request_password_reset_service",
     "verify_reset_code_service",
     "reset_password_service",
+    "create_goal_service",
+    "get_user_goals_service",
+    "get_group_goals_service",
+    "get_goal_service",
+    "update_goal_service",
+    "delete_goal_service",
+    "add_goal_contribution_service",
 ]

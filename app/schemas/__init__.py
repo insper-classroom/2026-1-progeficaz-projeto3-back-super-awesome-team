@@ -4,6 +4,7 @@ from .group_schema import GroupSchema
 from .bill_schema import BillSchema
 from .pendency_schema import PendencySchema
 from .expense_schema import ExpenseSchema
+from .goal_schema import GoalContributionSchema, GoalSchema
 
 __all__ = [
     "UserSchema",
@@ -14,4 +15,6 @@ __all__ = [
     "PendencySchema",
     "ExpenseSchema",
     "DeleteUserSchema",
+    "GoalSchema",
+    "GoalContributionSchema",
 ]
