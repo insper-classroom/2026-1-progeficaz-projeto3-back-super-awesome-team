@@ -2,7 +2,7 @@ from datetime import datetime
 
 
 class Group:
-    def __init__(self, name, members, created_by, description=None):
+    def __init__(self, name, members, created_by, description=None, image=None):
         if not name:
             raise ValueError("Nome obrigatório")
         if not members or len(members) == 0:
@@ -14,6 +14,7 @@ class Group:
         self.members = members
         self.created_by = created_by
         self.description = description
+        self.image = image
         self.created_at = datetime.utcnow()
 
     def to_dictionary(self):
@@ -22,5 +23,6 @@ class Group:
             "members": self.members,
             "created_by": self.created_by,
             "description": self.description,
+            "image": self.image,
             "created_at": self.created_at,
         }

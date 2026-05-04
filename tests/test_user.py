@@ -119,6 +119,29 @@ def test_delete_user_wrong_password(mock_service, client, auth_headers):
     assert response.status_code == 400
 
 
+@patch("app.routes.user.create_user_service")
+def test_create_user_with_image_ok(mock_service, client):
+    mock_service.return_value = ({"message": "OK ✅"}, None)
+    response = client.post(
+        "/user",
+        json={**USER_PAYLOAD, "image": "https://example.com/photo.jpg"},
+    )
+    assert response.status_code == 201
+    assert response.get_json() == {"message": "OK ✅"}
+
+
+@patch("app.routes.user.update_user_service")
+def test_update_user_image_ok(mock_service, client, auth_headers):
+    mock_service.return_value = ({"message": "Usuário atualizado com sucesso"}, None)
+    response = client.put(
+        "/user",
+        json={"image": "https://example.com/new-photo.jpg"},
+        headers=auth_headers,
+    )
+    assert response.status_code == 200
+    assert response.get_json() == {"message": "Usuário atualizado com sucesso"}
+
+
 @patch("app.routes.user.delete_user_service")
 def test_delete_user_has_groups(mock_service, client, auth_headers):
     mock_service.return_value = (
