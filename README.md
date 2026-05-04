@@ -283,6 +283,7 @@ O backend adiciona automaticamente o e-mail do usuário logado em `members` se e
 | Atualizar meta            | `PUT /goal/<goal_id>`                | Campos a alterar + JWT                                                      | Meta atualizada                   |
 | Deletar meta              | `DELETE /goal/<goal_id>`             | Apenas o id na URL + JWT                                                    | Mensagem de sucesso               |
 | Registrar aporte na meta  | `POST /goal/<goal_id>/contribution`  | `value`, opcionalmente `member_email` e `contributed_at`                    | Meta atualizada                   |
+| Atualizar aporte na meta  | `PUT /goal/<goal_id>/contribution/<contribution_index>` | `value`, opcionalmente `member_email` e `contributed_at`                    | Meta atualizada                   |
 
 `members` deve ser uma lista de e-mails de membros do grupo. Se omitido, a meta vale para todos os membros do grupo.
 `due_date` deve ser enviado em formato de data aceito pelo backend, por exemplo `2026-12-31`.
