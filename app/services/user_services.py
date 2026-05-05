@@ -38,7 +38,7 @@ def create_user_service(data):
 
     token = user.verification_token
     base_url = os.getenv("BASE_URL", "http://localhost:5000")
-    confirm_url = f"{base_url}/auth/verify-email/{token}"
+    confirm_url = f"{base_url}/auth/email-verifications/{token}"
     gevent.spawn(
         send_confirm_email, data["name"], data["email"], confirm_url
     ).link_exception(_email_error_handler)

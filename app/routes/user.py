@@ -28,7 +28,7 @@ def get_current_user():
     return jsonify(user), 200
 
 
-@user_bp.route("/user", methods=["PUT"])
+@user_bp.route("/user/me", methods=["PUT"])
 @jwt_required
 def update_users():
     data = request.get_json() or {}
@@ -41,14 +41,14 @@ def update_users():
     return jsonify(resultado), 200
 
 
-@user_bp.route("/user", methods=["DELETE"])
+@user_bp.route("/user/me", methods=["DELETE"])
 @jwt_required
 def delete_user():
     data = request.get_json() or {}
 
-    result, error = delete_user_service(request.current_user, data)
+    _, error = delete_user_service(request.current_user, data)
 
     if error:
         return jsonify(error), http_status_for_service_error(error)
 
-    return jsonify(result), 200
+    return ("", 204)

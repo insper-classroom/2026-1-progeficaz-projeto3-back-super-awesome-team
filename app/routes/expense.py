@@ -38,7 +38,7 @@ def get_user_expenses():
     user_email = request.current_user
     expenses, error = get_user_expenses_service(user_email)
     if error:
-        return jsonify(error), 500
+        return jsonify(error), http_status_for_service_error(error)
     return jsonify({"expenses": expenses}), 200
 
 
@@ -57,7 +57,7 @@ def update_expense(expense_id):
 @jwt_required
 def delete_expense(expense_id):
     user_email = request.current_user
-    result, error = delete_expense_service(expense_id, user_email)
+    _, error = delete_expense_service(expense_id, user_email)
     if error:
         return jsonify(error), http_status_for_service_error(error)
-    return jsonify(result), 200
+    return ("", 204)

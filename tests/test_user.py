@@ -58,14 +58,14 @@ def test_get_current_user_not_found(mock_service, client, auth_headers):
 
 
 def test_update_user_no_token(client):
-    response = client.put("/user", json={"name": "New Name"})
+    response = client.put("/user/me", json={"name": "New Name"})
     assert response.status_code == 401
 
 
 @patch("app.routes.user.update_user_service")
 def test_update_user_ok(mock_service, client, auth_headers):
     mock_service.return_value = ({"message": "Usuário atualizado com sucesso"}, None)
-    response = client.put("/user", json={"name": "New Name"}, headers=auth_headers)
+    response = client.put("/user/me", json={"name": "New Name"}, headers=auth_headers)
     assert response.status_code == 200
     assert response.get_json() == {"message": "Usuário atualizado com sucesso"}
 
@@ -73,14 +73,14 @@ def test_update_user_ok(mock_service, client, auth_headers):
 @patch("app.routes.user.update_user_service")
 def test_update_user_not_found(mock_service, client, auth_headers):
     mock_service.return_value = (None, {"error": "Usuário não encontrado"})
-    response = client.put("/user", json={"name": "New Name"}, headers=auth_headers)
+    response = client.put("/user/me", json={"name": "New Name"}, headers=auth_headers)
     assert response.status_code == 404
 
 
 @patch("app.routes.user.update_user_service")
 def test_update_user_no_fields_changed(mock_service, client, auth_headers):
     mock_service.return_value = (None, {"error": "Nenhum campo alterado"})
-    response = client.put("/user", json={}, headers=auth_headers)
+    response = client.put("/user/me", json={}, headers=auth_headers)
     assert response.status_code == 400
 
 
@@ -88,7 +88,7 @@ def test_update_user_no_fields_changed(mock_service, client, auth_headers):
 def test_update_user_wrong_current_password(mock_service, client, auth_headers):
     mock_service.return_value = (None, {"error": "Senha atual incorreta"})
     response = client.put(
-        "/user",
+        "/user/me",
         json={"password": "newpass123", "current_password": "wrong"},
         headers=auth_headers,
     )
@@ -96,7 +96,7 @@ def test_update_user_wrong_current_password(mock_service, client, auth_headers):
 
 
 def test_delete_user_no_token(client):
-    response = client.delete("/user")
+    response = client.delete("/user/me")
     assert response.status_code == 401
 
 
@@ -104,17 +104,17 @@ def test_delete_user_no_token(client):
 def test_delete_user_ok(mock_service, client, auth_headers):
     mock_service.return_value = ({"message": "Usuário deletado com sucesso"}, None)
     response = client.delete(
-        "/user", json={"password": "secret123"}, headers=auth_headers
+        "/user/me", json={"password": "secret123"}, headers=auth_headers
     )
-    assert response.status_code == 200
-    assert response.get_json() == {"message": "Usuário deletado com sucesso"}
+    assert response.status_code == 204
+    assert response.data == b""
 
 
 @patch("app.routes.user.delete_user_service")
 def test_delete_user_wrong_password(mock_service, client, auth_headers):
     mock_service.return_value = (None, {"error": "Senha incorreta"})
     response = client.delete(
-        "/user", json={"password": "wrong"}, headers=auth_headers
+        "/user/me", json={"password": "wrong"}, headers=auth_headers
     )
     assert response.status_code == 400
 
@@ -134,7 +134,7 @@ def test_create_user_with_image_ok(mock_service, client):
 def test_update_user_image_ok(mock_service, client, auth_headers):
     mock_service.return_value = ({"message": "Usuário atualizado com sucesso"}, None)
     response = client.put(
-        "/user",
+        "/user/me",
         json={"image": "https://example.com/new-photo.jpg"},
         headers=auth_headers,
     )
@@ -151,6 +151,6 @@ def test_delete_user_has_groups(mock_service, client, auth_headers):
         },
     )
     response = client.delete(
-        "/user", json={"password": "secret123"}, headers=auth_headers
+        "/user/me", json={"password": "secret123"}, headers=auth_headers
     )
     assert response.status_code == 409

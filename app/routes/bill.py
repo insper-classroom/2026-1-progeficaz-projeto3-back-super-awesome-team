@@ -31,7 +31,7 @@ def get_user_bills():
     user_email = request.current_user
     bills, error = get_user_bills_service(user_email)
     if error:
-        return jsonify(error), 500
+        return jsonify(error), http_status_for_service_error(error)
     return jsonify({"bills": bills}), 200
 
 
@@ -87,13 +87,13 @@ def update_bill(bill_id):
 @jwt_required
 def delete_bill(bill_id):
     user_email = request.current_user
-    result, error = delete_bill_service(bill_id, user_email)
+    _, error = delete_bill_service(bill_id, user_email)
     if error:
         return jsonify(error), http_status_for_service_error(error)
-    return jsonify(result), 200
+    return ("", 204)
 
 
-@bill_bp.route("/bill/<bill_id>/mark-as-paid", methods=["PUT"])
+@bill_bp.route("/bill/<bill_id>", methods=["PATCH"])
 @jwt_required
 def mark_bill_as_paid(bill_id):
     user_email = request.current_user

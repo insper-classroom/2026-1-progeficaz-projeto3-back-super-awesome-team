@@ -65,10 +65,10 @@ def update_goal(goal_id):
 @goal_bp.route("/goal/<goal_id>", methods=["DELETE"])
 @jwt_required
 def delete_goal(goal_id):
-    result, error = delete_goal_service(goal_id, request.current_user)
+    _, error = delete_goal_service(goal_id, request.current_user)
     if error:
         return jsonify(error), http_status_for_service_error(error)
-    return jsonify(result), 200
+    return ("", 204)
 
 
 @goal_bp.route("/goal/<goal_id>/contribution", methods=["POST"])

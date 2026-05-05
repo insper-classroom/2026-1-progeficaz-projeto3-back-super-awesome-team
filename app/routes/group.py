@@ -28,7 +28,7 @@ def get_user_groups():
     user_email = request.current_user
     groups, error = get_user_groups_service(user_email)
     if error:
-        return jsonify(error), 500
+        return jsonify(error), http_status_for_service_error(error)
     return jsonify({"groups": groups}), 200
 
 
@@ -57,7 +57,7 @@ def update_group(group_id):
 @jwt_required
 def delete_group(group_id):
     user_email = request.current_user
-    result, error = delete_group_service(group_id, user_email)
+    _, error = delete_group_service(group_id, user_email)
     if error:
         return jsonify(error), http_status_for_service_error(error)
-    return jsonify(result), 200
+    return ("", 204)

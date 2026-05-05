@@ -201,6 +201,53 @@ def _extract_confirmed_group_expenses(pendencies, bills_by_id, groups_by_id, use
     )
 
 
+def _extract_creditor_own_expenses(bills, groups_by_id, user_email):
+    expenses = []
+
+    for bill in bills:
+        if bill.get("created_by") != user_email:
+            continue
+
+        bill_id = str(bill.get("_id"))
+        group_id = str(bill.get("group_id"))
+        group = groups_by_id.get(group_id, {})
+
+        for member in bill.get("members_to_pay") or []:
+            if member.get("email") != user_email:
+                continue
+
+            value = _to_number(member.get("value"))
+            if value <= 0:
+                continue
+
+            expenses.append(
+                _serialize(
+                    {
+                        "_id": f"{bill_id}:self",
+                        "bill_id": bill_id,
+                        "group_id": group_id,
+                        "group_name": group.get("name"),
+                        "category": bill.get("bill_type") or "Sem categoria",
+                        "value": value,
+                        "date": bill.get("created_at"),
+                        "role": "debtor",
+                        "debtor_email": user_email,
+                        "creditor_email": user_email,
+                        "debtor_confirmed_at": bill.get("created_at"),
+                        "creditor_confirmed_at": bill.get("created_at"),
+                        "resolved_at": bill.get("created_at"),
+                        "self_share": True,
+                    }
+                )
+            )
+
+    return sorted(
+        expenses,
+        key=lambda item: _date_key(item.get("date")),
+        reverse=True,
+    )
+
+
 def _extract_due_expenses(pendencies, bills_by_id, groups_by_id, user_email):
     due_expenses = []
 
@@ -245,6 +292,26 @@ def _extract_due_expenses(pendencies, bills_by_id, groups_by_id, user_email):
     )
 
 
+def _extract_pending_debts(pendencies, bills_by_id, user_email):
+    pending_debts = []
+
+    for pendency in pendencies:
+        if pendency.get("debtor_email") != user_email:
+            continue
+
+        bill_id = str(pendency.get("bill_id"))
+        bill = bills_by_id.get(bill_id)
+        if not bill:
+            continue
+
+        if _is_confirmed_group_expense(pendency, bill):
+            continue
+
+        pending_debts.append(pendency)
+
+    return pending_debts
+
+
 def get_personal_summary_service(user_email):
     try:
         groups = list(
@@ -286,16 +353,34 @@ def get_personal_summary_service(user_email):
             groups_by_id,
             user_email,
         )
+        group_expenses.extend(
+            _extract_creditor_own_expenses(
+                bills,
+                groups_by_id,
+                user_email,
+            )
+        )
+        group_expenses = sorted(
+            group_expenses,
+            key=lambda item: _date_key(item.get("date")),
+            reverse=True,
+        )
         due_expenses = _extract_due_expenses(
             pendencies,
             bills_by_id,
             groups_by_id,
             user_email,
         )
+        pending_debts = _extract_pending_debts(
+            pendencies,
+            bills_by_id,
+            user_email,
+        )
 
         total_expenses = sum(
             _to_number(expense.get("value")) for expense in group_expenses
         )
+        total_owed = sum(_to_number(debt.get("value")) for debt in pending_debts)
         total_paid = sum(
             _to_number(expense.get("value"))
             for expense in group_expenses
@@ -316,10 +401,12 @@ def get_personal_summary_service(user_email):
             "contributions": contributions,
             "summary": {
                 "total_expenses": round(total_expenses, 2),
+                "total_owed": round(total_owed, 2),
                 "total_paid": round(total_paid, 2),
                 "total_received": round(total_received, 2),
                 "total_contributions": round(total_contributions, 2),
                 "expense_count": len(group_expenses),
+                "owed_count": len(pending_debts),
                 "contribution_count": len(contributions),
                 "group_count": len(groups),
             },

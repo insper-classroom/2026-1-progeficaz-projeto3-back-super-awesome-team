@@ -73,6 +73,10 @@ def test_get_personal_summary_aggregates_confirmed_group_expenses_and_user_contr
             "group_id": str(GROUP_ID),
             "total_value": 90.0,
             "created_by": USER_EMAIL,
+            "members_to_pay": [
+                {"email": USER_EMAIL, "value": 50.0},
+                {"email": OTHER_EMAIL, "value": 40.0},
+            ],
             "due_date": "2026-05-06T00:00:00Z",
             "created_at": "2026-05-02T12:00:00Z",
         },
@@ -138,11 +142,13 @@ def test_get_personal_summary_aggregates_confirmed_group_expenses_and_user_contr
         result, error = get_personal_summary_service(USER_EMAIL)
 
     assert error is None
-    assert result["summary"]["total_expenses"] == 120.0
-    assert result["summary"]["total_paid"] == 80.0
+    assert result["summary"]["total_expenses"] == 170.0
+    assert result["summary"]["total_owed"] == 25.0
+    assert result["summary"]["total_paid"] == 130.0
     assert result["summary"]["total_received"] == 40.0
     assert result["summary"]["total_contributions"] == 50.0
-    assert len(result["expenses"]) == 2
+    assert result["summary"]["owed_count"] == 1
+    assert len(result["expenses"]) == 3
     assert len(result["due_expenses"]) == 4
     assert len(result["contributions"]) == 1
     assert result["due_expenses"][0]["category"] == "Alimentação"
@@ -157,12 +163,24 @@ def test_get_personal_summary_aggregates_confirmed_group_expenses_and_user_contr
     assert result["expenses"][0]["category"] == "Alimentação"
     assert result["expenses"][0]["group_name"] == "Casa"
     assert result["expenses"][0]["role"] == "debtor"
+    own_expense = next(
+        expense for expense in result["expenses"] if expense.get("self_share")
+    )
+    assert own_expense["category"] == "Transporte"
+    assert own_expense["value"] == 50.0
+    assert own_expense["role"] == "debtor"
+    assert own_expense["debtor_email"] == USER_EMAIL
+    assert own_expense["creditor_email"] == USER_EMAIL
     assert result["contributions"][0]["goal_name"] == "Reserva"
     assert result["contributions"][0]["group_name"] == "Casa"
-    assert result["charts"]["expenses_by_category"][0]["name"] == "Alimentação"
+    categories_by_name = {
+        item["name"]: item for item in result["charts"]["expenses_by_category"]
+    }
+    assert categories_by_name["Alimentação"]["value"] == 80.0
+    assert categories_by_name["Transporte"]["value"] == 90.0
     assert result["charts"]["contributions_by_goal"][0]["value"] == 50.0
     assert result["charts"]["monthly_flow"] == [
-        {"month": "2026-05", "expenses": 120.0, "contributions": 50.0}
+        {"month": "2026-05", "expenses": 170.0, "contributions": 50.0}
     ]
     pendencies_query = pendencies_col.find.call_args.args[0]
     assert "is_resolved" not in pendencies_query
