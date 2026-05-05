@@ -12,6 +12,7 @@ from .routes import bill_bp
 from .routes import pendency_bp
 from .routes import expense_bp
 from .routes import goal_bp
+from .routes import personal_bp
 
 
 DEFAULT_CORS_ORIGINS = (
@@ -70,5 +71,6 @@ def create_app():
     app.register_blueprint(pendency_bp)
     app.register_blueprint(expense_bp)
     app.register_blueprint(goal_bp)
+    app.register_blueprint(personal_bp)
 
     return app

@@ -55,6 +55,7 @@ from .goal_services import (
     update_goal_contribution_service,
     update_goal_service,
 )
+from .personal_services import get_personal_summary_service
 
 __all__ = [
     "login_service",
@@ -100,4 +101,5 @@ __all__ = [
     "delete_goal_service",
     "add_goal_contribution_service",
     "update_goal_contribution_service",
+    "get_personal_summary_service",
 ]

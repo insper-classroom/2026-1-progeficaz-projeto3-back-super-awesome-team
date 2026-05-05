@@ -5,6 +5,7 @@ from .bill import bill_bp
 from .pendency import pendency_bp
 from .expense import expense_bp
 from .goal import goal_bp
+from .personal import personal_bp
 
 __all__ = [
     "user_bp",
@@ -14,4 +15,5 @@ __all__ = [
     "pendency_bp",
     "expense_bp",
     "goal_bp",
+    "personal_bp",
 ]
