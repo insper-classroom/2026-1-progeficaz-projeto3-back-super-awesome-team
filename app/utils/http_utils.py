@@ -27,6 +27,7 @@ def http_status_for_service_error(error):
         m in err
         for m in (
             "Não é possível excluir",
+            "Não é possível deletar",
             "Não é possível editar uma conta já paga",
             "Não é possível remover",
         )

@@ -281,6 +281,78 @@ def test_update_group_add_nonexistent_member():
         assert "não encontrado" in error["error"]
 
 
+def test_update_group_not_creator():
+    with patch("app.services.group_services.mongo") as mock_mongo:
+        mock_mongo.__getitem__.return_value.find_one.return_value = dict(GROUP_DOC)
+
+        result, error = update_group_service(
+            GROUP_ID, {"name": "New Name"}, "member@example.com"
+        )
+
+        assert result is None
+        assert error == {"error": "Apenas o criador do grupo pode editá-lo"}
+
+
+def test_update_group_transfer_ownership_same_owner():
+    with patch("app.services.group_services.mongo") as mock_mongo:
+        mock_mongo.__getitem__.return_value.find_one.return_value = dict(GROUP_DOC)
+
+        result, error = update_group_service(
+            GROUP_ID, {"created_by": "creator@example.com"}, "creator@example.com"
+        )
+
+        assert result is None
+        assert error == {"error": "O novo dono deve ser diferente do dono atual"}
+
+
+def test_update_group_transfer_ownership_non_member():
+    with patch("app.services.group_services.mongo") as mock_mongo:
+        mock_mongo.__getitem__.return_value.find_one.return_value = dict(GROUP_DOC)
+
+        result, error = update_group_service(
+            GROUP_ID, {"created_by": "outsider@example.com"}, "creator@example.com"
+        )
+
+        assert result is None
+        assert error == {"error": "O novo dono deve ser membro do grupo"}
+
+
+def test_update_group_transfer_ownership_ok():
+    with patch("app.services.group_services.mongo") as mock_mongo:
+        updated_doc = {**GROUP_DOC, "_id": OBJ_GROUP_ID, "created_by": "member@example.com"}
+        mock_mongo.__getitem__.return_value.find_one.side_effect = [
+            dict(GROUP_DOC),
+            updated_doc,
+        ]
+
+        result, error = update_group_service(
+            GROUP_ID, {"created_by": "member@example.com"}, "creator@example.com"
+        )
+
+        assert error is None
+        assert result["message"] == "Grupo atualizado com sucesso"
+        mock_mongo.__getitem__.return_value.update_one.assert_called_once()
+
+
+def test_update_group_empty_members():
+    with patch("app.services.group_services.mongo") as mock_mongo:
+        groups_col = MagicMock()
+        groups_col.find_one.return_value = {**GROUP_DOC, "_id": OBJ_GROUP_ID}
+        bills_col = MagicMock()
+        bills_col.find.return_value = []
+        mock_mongo.__getitem__.side_effect = {
+            "groups": groups_col,
+            "bills": bills_col,
+        }.get
+
+        result, error = update_group_service(
+            GROUP_ID, {"members": []}, "creator@example.com"
+        )
+
+        assert result is None
+        assert error == {"error": "O grupo deve ter pelo menos um membro"}
+
+
 def test_update_group_remove_member_with_active_bill():
     with patch("app.services.group_services.mongo") as mock_mongo:
         groups_col = MagicMock()
@@ -322,10 +394,21 @@ def test_delete_group_not_creator():
         assert error == {"error": "Apenas o criador do grupo pode deletá-lo"}
 
 
+def test_delete_group_with_other_members():
+    with patch("app.services.group_services.mongo") as mock_mongo:
+        mock_mongo.__getitem__.return_value.find_one.return_value = dict(GROUP_DOC)
+
+        result, error = delete_group_service(GROUP_ID, "creator@example.com")
+
+        assert result is None
+        assert "outros membros" in error["error"]
+
+
 def test_delete_group_ok():
     with patch("app.services.group_services.mongo") as mock_mongo:
+        solo_group = {**GROUP_DOC, "_id": OBJ_GROUP_ID, "members": ["creator@example.com"]}
         groups_col = MagicMock()
-        groups_col.find_one.return_value = {**GROUP_DOC, "_id": OBJ_GROUP_ID}
+        groups_col.find_one.return_value = solo_group
         bills_col = MagicMock()
         bills_col.find.return_value.distinct.return_value = []
         pendencies_col = MagicMock()

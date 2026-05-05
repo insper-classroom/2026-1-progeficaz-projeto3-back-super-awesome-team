@@ -49,7 +49,13 @@ def create_group_service(data, user_email):
             if not user:
                 return None, {"error": f"Usuário {member_email} não encontrado"}
 
-        group = Group(data["name"], members, user_email, data.get("description"), data.get("image"))
+        group = Group(
+            data["name"],
+            members,
+            user_email,
+            data.get("description"),
+            data.get("image"),
+        )
         result = mongo["groups"].insert_one(group.to_dictionary())
         return {
             "message": "Grupo criado com sucesso",
@@ -178,6 +184,11 @@ def delete_group_service(group_id, user_email):
         # Apenas o criador pode deletar o grupo
         if group["created_by"] != user_email:
             return None, {"error": "Apenas o criador do grupo pode deletá-lo"}
+
+        if len(group.get("members", [])) > 1:
+            return None, {
+                "error": "Não é possível deletar o grupo: o grupo possui outros membros."
+            }
 
         # Deleta todas as pendencies associadas às bills do grupo
         bills_ids = list(
