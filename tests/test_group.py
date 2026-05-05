@@ -181,3 +181,13 @@ def test_delete_group_forbidden(mock_service, client, auth_headers):
     )
     response = client.delete(f"/group/{GROUP_ID}", headers=auth_headers)
     assert response.status_code == 403
+
+
+@patch("app.routes.group.delete_group_service")
+def test_delete_group_with_members_conflict(mock_service, client, auth_headers):
+    mock_service.return_value = (
+        None,
+        {"error": "Não é possível deletar o grupo: o grupo possui outros membros."},
+    )
+    response = client.delete(f"/group/{GROUP_ID}", headers=auth_headers)
+    assert response.status_code == 409
