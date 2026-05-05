@@ -5,6 +5,7 @@ from functools import wraps
 from flask import request, jsonify
 
 SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "dev-secret-key")
+JWT_CLOCK_SKEW_LEEWAY_SECONDS = 5
 
 
 def generate_token(email):
@@ -17,7 +18,12 @@ def generate_token(email):
 
 
 def decode_token(token):
-    return jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+    return jwt.decode(
+        token,
+        SECRET_KEY,
+        algorithms=["HS256"],
+        leeway=JWT_CLOCK_SKEW_LEEWAY_SECONDS,
+    )
 
 
 def jwt_required(f):
