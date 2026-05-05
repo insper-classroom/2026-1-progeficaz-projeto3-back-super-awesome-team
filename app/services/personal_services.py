@@ -201,6 +201,53 @@ def _extract_confirmed_group_expenses(pendencies, bills_by_id, groups_by_id, use
     )
 
 
+def _extract_creditor_own_expenses(bills, groups_by_id, user_email):
+    expenses = []
+
+    for bill in bills:
+        if bill.get("created_by") != user_email:
+            continue
+
+        bill_id = str(bill.get("_id"))
+        group_id = str(bill.get("group_id"))
+        group = groups_by_id.get(group_id, {})
+
+        for member in bill.get("members_to_pay") or []:
+            if member.get("email") != user_email:
+                continue
+
+            value = _to_number(member.get("value"))
+            if value <= 0:
+                continue
+
+            expenses.append(
+                _serialize(
+                    {
+                        "_id": f"{bill_id}:self",
+                        "bill_id": bill_id,
+                        "group_id": group_id,
+                        "group_name": group.get("name"),
+                        "category": bill.get("bill_type") or "Sem categoria",
+                        "value": value,
+                        "date": bill.get("created_at"),
+                        "role": "debtor",
+                        "debtor_email": user_email,
+                        "creditor_email": user_email,
+                        "debtor_confirmed_at": bill.get("created_at"),
+                        "creditor_confirmed_at": bill.get("created_at"),
+                        "resolved_at": bill.get("created_at"),
+                        "self_share": True,
+                    }
+                )
+            )
+
+    return sorted(
+        expenses,
+        key=lambda item: _date_key(item.get("date")),
+        reverse=True,
+    )
+
+
 def _extract_due_expenses(pendencies, bills_by_id, groups_by_id, user_email):
     due_expenses = []
 
@@ -305,6 +352,18 @@ def get_personal_summary_service(user_email):
             bills_by_id,
             groups_by_id,
             user_email,
+        )
+        group_expenses.extend(
+            _extract_creditor_own_expenses(
+                bills,
+                groups_by_id,
+                user_email,
+            )
+        )
+        group_expenses = sorted(
+            group_expenses,
+            key=lambda item: _date_key(item.get("date")),
+            reverse=True,
         )
         due_expenses = _extract_due_expenses(
             pendencies,
