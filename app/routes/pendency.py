@@ -18,7 +18,7 @@ def get_user_pendencies():
     user_email = request.current_user
     result, error = get_user_pendencies_service(user_email)
     if error:
-        return jsonify(error), 500
+        return jsonify(error), http_status_for_service_error(error)
     return jsonify(result), 200
 
 
@@ -52,7 +52,7 @@ def get_group_pendencies(group_id):
     return jsonify({"pendencies": result}), 200
 
 
-@pendency_bp.route("/pendencies/<pendency_id>/confirm-debtor", methods=["PUT"])
+@pendency_bp.route("/pendencies/<pendency_id>/debtor-confirmation", methods=["PUT"])
 @jwt_required
 def confirm_debtor_payment(pendency_id):
     user_email = request.current_user
@@ -62,7 +62,7 @@ def confirm_debtor_payment(pendency_id):
     return jsonify(result), 200
 
 
-@pendency_bp.route("/pendencies/<pendency_id>/confirm-creditor", methods=["PUT"])
+@pendency_bp.route("/pendencies/<pendency_id>/creditor-confirmation", methods=["PUT"])
 @jwt_required
 def confirm_creditor_payment(pendency_id):
     user_email = request.current_user

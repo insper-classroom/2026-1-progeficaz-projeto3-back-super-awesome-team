@@ -226,10 +226,8 @@ def test_delete_bill_ok(mock_service, client, auth_headers):
         None,
     )
     response = client.delete(f"/bill/{BILL_ID}", headers=auth_headers)
-    assert response.status_code == 200
-    assert response.get_json() == {
-        "message": "Conta e suas pendências foram deletadas com sucesso"
-    }
+    assert response.status_code == 204
+    assert response.data == b""
 
 
 @patch("app.routes.bill.delete_bill_service")
@@ -255,7 +253,7 @@ def test_mark_bill_as_paid_ok(mock_service, client, auth_headers):
         {"message": "Conta marcada como paga e pendências resolvidas"},
         None,
     )
-    response = client.put(f"/bill/{BILL_ID}/mark-as-paid", headers=auth_headers)
+    response = client.patch(f"/bill/{BILL_ID}", headers=auth_headers)
     assert response.status_code == 200
     assert response.get_json() == {
         "message": "Conta marcada como paga e pendências resolvidas"
@@ -265,7 +263,7 @@ def test_mark_bill_as_paid_ok(mock_service, client, auth_headers):
 @patch("app.routes.bill.mark_bill_as_paid_service")
 def test_mark_bill_as_paid_not_found(mock_service, client, auth_headers):
     mock_service.return_value = (None, {"error": "Conta não encontrada"})
-    response = client.put(f"/bill/{BILL_ID}/mark-as-paid", headers=auth_headers)
+    response = client.patch(f"/bill/{BILL_ID}", headers=auth_headers)
     assert response.status_code == 404
 
 
@@ -275,5 +273,5 @@ def test_mark_bill_as_paid_forbidden(mock_service, client, auth_headers):
         None,
         {"error": "Apenas o criador da conta pode marcá-la como paga"},
     )
-    response = client.put(f"/bill/{BILL_ID}/mark-as-paid", headers=auth_headers)
+    response = client.patch(f"/bill/{BILL_ID}", headers=auth_headers)
     assert response.status_code == 403

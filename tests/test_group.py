@@ -167,10 +167,8 @@ def test_delete_group_ok(mock_service, client, auth_headers):
         None,
     )
     response = client.delete(f"/group/{GROUP_ID}", headers=auth_headers)
-    assert response.status_code == 200
-    assert response.get_json() == {
-        "message": "Grupo e seus dados associados foram deletados com sucesso"
-    }
+    assert response.status_code == 204
+    assert response.data == b""
 
 
 @patch("app.routes.group.delete_group_service")

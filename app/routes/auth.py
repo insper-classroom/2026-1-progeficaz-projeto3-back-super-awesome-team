@@ -50,7 +50,7 @@ def _redirect_to_frontend(url, query_params=None, fragment_params=None):
     return redirect(_with_url_params(url, query_params, fragment_params))
 
 
-@auth_bp.route("/auth/login", methods=["POST"])
+@auth_bp.route("/auth/sessions", methods=["POST"])
 def login():
     data = request.get_json()
     result, error = login_service(data)
@@ -61,7 +61,7 @@ def login():
     return jsonify(result), 200
 
 
-@auth_bp.route("/auth/verify-email/<token>", methods=["GET"])
+@auth_bp.route("/auth/email-verifications/<token>", methods=["GET"])
 def verify_email(token):
     result, error = verify_email_service(token)
     frontend_url = _frontend_target("FRONTEND_EMAIL_VERIFIED_URL", "/email-verified")
@@ -113,7 +113,7 @@ def google_callback():
     return jsonify(result), 200
 
 
-@auth_bp.route("/auth/forgot-password", methods=["POST"])
+@auth_bp.route("/auth/password-resets", methods=["POST"])
 def forgot_password():
     data = request.get_json()
     result, error = request_password_reset_service(data)
@@ -122,7 +122,7 @@ def forgot_password():
     return jsonify(result), 200
 
 
-@auth_bp.route("/auth/verify-reset-code", methods=["POST"])
+@auth_bp.route("/auth/password-resets/verify", methods=["POST"])
 def verify_reset_code():
     data = request.get_json()
     result, error = verify_reset_code_service(data)
@@ -131,7 +131,7 @@ def verify_reset_code():
     return jsonify(result), 200
 
 
-@auth_bp.route("/auth/reset-password", methods=["POST"])
+@auth_bp.route("/auth/password", methods=["PATCH"])
 def reset_password():
     data = request.get_json()
     result, error = reset_password_service(data)

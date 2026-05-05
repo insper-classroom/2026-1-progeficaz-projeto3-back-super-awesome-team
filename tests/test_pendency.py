@@ -117,7 +117,7 @@ def test_get_group_pendencies_forbidden(mock_service, client, auth_headers):
 
 
 def test_confirm_debtor_payment_no_token(client):
-    response = client.put(f"/pendencies/{PENDENCY_ID}/confirm-debtor")
+    response = client.put(f"/pendencies/{PENDENCY_ID}/debtor-confirmation")
     assert response.status_code == 401
 
 
@@ -125,7 +125,7 @@ def test_confirm_debtor_payment_no_token(client):
 def test_confirm_debtor_payment_ok(mock_service, client, auth_headers):
     mock_service.return_value = ({"message": "Confirmação do devedor registrada"}, None)
     response = client.put(
-        f"/pendencies/{PENDENCY_ID}/confirm-debtor", headers=auth_headers
+        f"/pendencies/{PENDENCY_ID}/debtor-confirmation", headers=auth_headers
     )
     assert response.status_code == 200
     assert response.get_json() == {"message": "Confirmação do devedor registrada"}
@@ -135,7 +135,7 @@ def test_confirm_debtor_payment_ok(mock_service, client, auth_headers):
 def test_confirm_debtor_payment_not_found(mock_service, client, auth_headers):
     mock_service.return_value = (None, {"error": "Pendência não encontrada"})
     response = client.put(
-        f"/pendencies/{PENDENCY_ID}/confirm-debtor", headers=auth_headers
+        f"/pendencies/{PENDENCY_ID}/debtor-confirmation", headers=auth_headers
     )
     assert response.status_code == 404
 
@@ -147,13 +147,13 @@ def test_confirm_debtor_payment_forbidden(mock_service, client, auth_headers):
         {"error": "Apenas o devedor pode confirmar o pagamento"},
     )
     response = client.put(
-        f"/pendencies/{PENDENCY_ID}/confirm-debtor", headers=auth_headers
+        f"/pendencies/{PENDENCY_ID}/debtor-confirmation", headers=auth_headers
     )
     assert response.status_code == 403
 
 
 def test_confirm_creditor_payment_no_token(client):
-    response = client.put(f"/pendencies/{PENDENCY_ID}/confirm-creditor")
+    response = client.put(f"/pendencies/{PENDENCY_ID}/creditor-confirmation")
     assert response.status_code == 401
 
 
@@ -161,7 +161,7 @@ def test_confirm_creditor_payment_no_token(client):
 def test_confirm_creditor_payment_ok(mock_service, client, auth_headers):
     mock_service.return_value = ({"message": "Confirmação do credor registrada"}, None)
     response = client.put(
-        f"/pendencies/{PENDENCY_ID}/confirm-creditor", headers=auth_headers
+        f"/pendencies/{PENDENCY_ID}/creditor-confirmation", headers=auth_headers
     )
     assert response.status_code == 200
     assert response.get_json() == {"message": "Confirmação do credor registrada"}
@@ -171,7 +171,7 @@ def test_confirm_creditor_payment_ok(mock_service, client, auth_headers):
 def test_confirm_creditor_payment_not_found(mock_service, client, auth_headers):
     mock_service.return_value = (None, {"error": "Pendência não encontrada"})
     response = client.put(
-        f"/pendencies/{PENDENCY_ID}/confirm-creditor", headers=auth_headers
+        f"/pendencies/{PENDENCY_ID}/creditor-confirmation", headers=auth_headers
     )
     assert response.status_code == 404
 
@@ -183,6 +183,6 @@ def test_confirm_creditor_payment_forbidden(mock_service, client, auth_headers):
         {"error": "Apenas o credor pode confirmar o recebimento"},
     )
     response = client.put(
-        f"/pendencies/{PENDENCY_ID}/confirm-creditor", headers=auth_headers
+        f"/pendencies/{PENDENCY_ID}/creditor-confirmation", headers=auth_headers
     )
     assert response.status_code == 403

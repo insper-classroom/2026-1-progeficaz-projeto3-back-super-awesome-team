@@ -135,8 +135,8 @@ def test_update_expense_forbidden(mock_service, client, auth_headers):
 def test_delete_expense_ok(mock_service, client, auth_headers):
     mock_service.return_value = ({"message": "Despesa deletada com sucesso"}, None)
     response = client.delete(f"/expense/{EXPENSE_ID}", headers=auth_headers)
-    assert response.status_code == 200
-    assert response.get_json() == {"message": "Despesa deletada com sucesso"}
+    assert response.status_code == 204
+    assert response.data == b""
 
 
 @patch("app.routes.expense.delete_expense_service")

@@ -178,8 +178,8 @@ def test_delete_goal_no_token(client):
 def test_delete_goal_ok(mock_service, client, auth_headers):
     mock_service.return_value = ({"message": "Meta deletada com sucesso"}, None)
     response = client.delete(f"/goal/{GOAL_ID}", headers=auth_headers)
-    assert response.status_code == 200
-    assert response.get_json() == {"message": "Meta deletada com sucesso"}
+    assert response.status_code == 204
+    assert response.data == b""
 
 
 @patch("app.routes.goal.delete_goal_service")
