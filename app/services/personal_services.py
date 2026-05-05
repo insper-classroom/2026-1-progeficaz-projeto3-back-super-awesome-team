@@ -209,10 +209,6 @@ def _extract_due_expenses(pendencies, bills_by_id, groups_by_id, user_email):
         bill = bills_by_id.get(bill_id)
         if not bill:
             continue
-        if pendency.get("debtor_email") != user_email:
-            continue
-        if _is_confirmed_group_expense(pendency, bill):
-            continue
 
         due_date = bill.get("due_date")
         if not due_date:
@@ -220,6 +216,8 @@ def _extract_due_expenses(pendencies, bills_by_id, groups_by_id, user_email):
 
         group_id = str(bill.get("group_id"))
         group = groups_by_id.get(group_id, {})
+        role = "creditor" if pendency.get("creditor_email") == user_email else "debtor"
+        resolved = _is_confirmed_group_expense(pendency, bill)
         due_expenses.append(
             _serialize(
                 {
@@ -230,9 +228,13 @@ def _extract_due_expenses(pendencies, bills_by_id, groups_by_id, user_email):
                     "category": bill.get("bill_type") or "Sem categoria",
                     "value": _to_number(pendency.get("value")),
                     "due_date": due_date,
+                    "role": role,
+                    "resolved": resolved,
+                    "debtor_email": pendency.get("debtor_email"),
                     "creditor_email": pendency.get("creditor_email"),
                     "debtor_confirmed": pendency.get("debtor_confirmed"),
                     "creditor_confirmed": pendency.get("creditor_confirmed"),
+                    "resolved_at": pendency.get("resolved_at"),
                 }
             )
         )

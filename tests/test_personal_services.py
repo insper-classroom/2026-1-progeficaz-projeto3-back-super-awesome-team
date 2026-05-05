@@ -10,6 +10,7 @@ GROUP_ID = ObjectId("507f1f77bcf86cd799439012")
 GOAL_ID = ObjectId("507f1f77bcf86cd799439011")
 BILL_ID = ObjectId("507f1f77bcf86cd799439010")
 SECOND_BILL_ID = ObjectId("507f1f77bcf86cd799439013")
+THIRD_BILL_ID = ObjectId("507f1f77bcf86cd799439017")
 PENDENCY_ID = ObjectId("507f1f77bcf86cd799439014")
 SECOND_PENDENCY_ID = ObjectId("507f1f77bcf86cd799439015")
 
@@ -72,6 +73,16 @@ def test_get_personal_summary_aggregates_confirmed_group_expenses_and_user_contr
             "group_id": str(GROUP_ID),
             "total_value": 90.0,
             "created_by": USER_EMAIL,
+            "due_date": "2026-05-06T00:00:00Z",
+            "created_at": "2026-05-02T12:00:00Z",
+        },
+        {
+            "_id": THIRD_BILL_ID,
+            "bill_type": "Internet",
+            "group_id": str(GROUP_ID),
+            "total_value": 30.0,
+            "created_by": USER_EMAIL,
+            "due_date": "2026-05-05T00:00:00Z",
             "created_at": "2026-05-02T12:00:00Z",
         },
     ]
@@ -108,6 +119,16 @@ def test_get_personal_summary_aggregates_confirmed_group_expenses_and_user_contr
             "creditor_confirmed": False,
             "is_resolved": False,
         },
+        {
+            "_id": ObjectId("507f1f77bcf86cd799439018"),
+            "bill_id": str(THIRD_BILL_ID),
+            "debtor_email": OTHER_EMAIL,
+            "creditor_email": USER_EMAIL,
+            "value": 30.0,
+            "debtor_confirmed": False,
+            "creditor_confirmed": False,
+            "is_resolved": False,
+        },
     ]
 
     with patch(
@@ -122,11 +143,17 @@ def test_get_personal_summary_aggregates_confirmed_group_expenses_and_user_contr
     assert result["summary"]["total_received"] == 40.0
     assert result["summary"]["total_contributions"] == 50.0
     assert len(result["expenses"]) == 2
-    assert len(result["due_expenses"]) == 1
+    assert len(result["due_expenses"]) == 4
     assert len(result["contributions"]) == 1
     assert result["due_expenses"][0]["category"] == "Alimentação"
-    assert result["due_expenses"][0]["value"] == 25.0
+    assert result["due_expenses"][0]["value"] == 80.0
+    assert result["due_expenses"][0]["role"] == "debtor"
+    assert result["due_expenses"][0]["resolved"] is True
     assert result["due_expenses"][0]["due_date"] == "2026-05-05T00:00:00Z"
+    due_roles = {item["role"] for item in result["due_expenses"]}
+    due_statuses = {item["resolved"] for item in result["due_expenses"]}
+    assert due_roles == {"debtor", "creditor"}
+    assert due_statuses == {True, False}
     assert result["expenses"][0]["category"] == "Alimentação"
     assert result["expenses"][0]["group_name"] == "Casa"
     assert result["expenses"][0]["role"] == "debtor"
