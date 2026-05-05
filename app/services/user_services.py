@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from ..models import User
 from ..extensions import mongo
 from ..schemas import UserSchema, UpdateUserSchema, DeleteUserSchema
@@ -21,10 +22,31 @@ def _email_error_handler(greenlet):
     print(f"Erro ao enviar e-mail: {greenlet.exception}")
 
 
+def _normalize_birth_date(value):
+    if value is None:
+        return None
+
+    birth_date = str(value).strip()
+    if not birth_date:
+        return None
+
+    try:
+        datetime.strptime(birth_date, "%Y-%m-%d")
+    except ValueError as exc:
+        raise ValueError("Data de nascimento inválida") from exc
+
+    return birth_date
+
+
 def create_user_service(data):
     erros = schema.validate(data)
     if erros:
         return None, erros
+
+    try:
+        birth_date = _normalize_birth_date(data.get("birth_date"))
+    except ValueError as exc:
+        return None, {"error": str(exc)}
 
     existing = get_user_by_email(data["email"])
     if existing:
@@ -33,7 +55,13 @@ def create_user_service(data):
     hashed = bcrypt.hashpw(data["password"].encode("utf-8"), bcrypt.gensalt()).decode(
         "utf-8"
     )
-    user = User(data["name"], data["email"], hashed, image=data.get("image"))
+    user = User(
+        data["name"],
+        data["email"],
+        hashed,
+        image=data.get("image"),
+        birth_date=birth_date,
+    )
     mongo["users"].insert_one(user.to_dictionary())
 
     token = user.verification_token
@@ -81,6 +109,12 @@ def update_user_service(user_email, data):
 
     if "image" in data:
         updated_fields["image"] = data["image"]
+
+    if "birth_date" in data:
+        try:
+            updated_fields["birth_date"] = _normalize_birth_date(data.get("birth_date"))
+        except ValueError as exc:
+            return None, {"error": str(exc)}
 
     if "password" in data:
         current_password = data.get("current_password")

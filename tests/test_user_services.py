@@ -118,6 +118,49 @@ def test_create_user_with_image_ok():
         mock_gevent.spawn.assert_called_once()
 
 
+def test_create_user_with_birth_date_ok():
+    with (
+        patch("app.services.user_services.get_user_by_email") as mock_get_user,
+        patch("app.services.user_services.mongo") as mock_mongo,
+        patch("app.services.user_services.bcrypt") as mock_bcrypt,
+        patch("app.services.user_services.gevent") as mock_gevent,
+    ):
+        mock_get_user.return_value = None
+        mock_bcrypt.hashpw.return_value.decode.return_value = "hashed_password"
+        mock_bcrypt.gensalt.return_value = b"salt"
+
+        result, error = create_user_service(
+            {
+                "name": "Test",
+                "email": "new@example.com",
+                "password": "secret123",
+                "confirm_password": "secret123",
+                "birth_date": "2000-01-02",
+            }
+        )
+
+        assert error is None
+        assert result == {"message": "OK ✅"}
+        call_args = mock_mongo.__getitem__.return_value.insert_one.call_args[0][0]
+        assert call_args["birth_date"] == "2000-01-02"
+        mock_gevent.spawn.assert_called_once()
+
+
+def test_create_user_invalid_birth_date():
+    result, error = create_user_service(
+        {
+            "name": "Test",
+            "email": "new@example.com",
+            "password": "secret123",
+            "confirm_password": "secret123",
+            "birth_date": "02/01/2000",
+        }
+    )
+
+    assert result is None
+    assert error == {"error": "Data de nascimento inválida"}
+
+
 def test_get_current_user_not_found():
     with patch("app.services.user_services.get_user_by_email") as mock_get_user:
         mock_get_user.return_value = None
@@ -189,6 +232,45 @@ def test_update_user_name_ok():
         assert error is None
         assert result == {"message": "Usuário atualizado com sucesso"}
         mock_mongo.__getitem__.return_value.update_one.assert_called_once()
+
+
+def test_update_user_birth_date_ok():
+    with patch("app.services.user_services.mongo") as mock_mongo:
+        mock_mongo.__getitem__.return_value.find_one.return_value = dict(USER_DOC)
+
+        result, error = update_user_service(
+            "test@example.com", {"birth_date": "2000-01-02"}
+        )
+
+        assert error is None
+        assert result == {"message": "Usuário atualizado com sucesso"}
+        update = mock_mongo.__getitem__.return_value.update_one.call_args.args[1]
+        assert update["$set"]["birth_date"] == "2000-01-02"
+
+
+def test_update_user_empty_birth_date_clears_value():
+    with patch("app.services.user_services.mongo") as mock_mongo:
+        mock_mongo.__getitem__.return_value.find_one.return_value = dict(USER_DOC)
+
+        result, error = update_user_service("test@example.com", {"birth_date": ""})
+
+        assert error is None
+        assert result == {"message": "Usuário atualizado com sucesso"}
+        update = mock_mongo.__getitem__.return_value.update_one.call_args.args[1]
+        assert update["$set"]["birth_date"] is None
+
+
+def test_update_user_invalid_birth_date():
+    with patch("app.services.user_services.mongo") as mock_mongo:
+        mock_mongo.__getitem__.return_value.find_one.return_value = dict(USER_DOC)
+
+        result, error = update_user_service(
+            "test@example.com", {"birth_date": "02/01/2000"}
+        )
+
+        assert result is None
+        assert error == {"error": "Data de nascimento inválida"}
+        mock_mongo.__getitem__.return_value.update_one.assert_not_called()
 
 
 def test_update_user_no_fields():

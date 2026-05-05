@@ -7,6 +7,7 @@ class UserSchema(Schema):
     password = fields.Str(required=True, validate=validate.Length(min=6))
     confirm_password = fields.Str(required=True)
     image = fields.Str(required=False, allow_none=True, load_default=None)
+    birth_date = fields.Str(required=False, allow_none=True, load_default=None)
 
     @validates_schema
     def validate_passwords_match(self, data, **kwargs):
@@ -21,6 +22,7 @@ class UpdateUserSchema(Schema):
     password = fields.Str(required=False, validate=validate.Length(min=6))
     current_password = fields.Str(required=False)
     image = fields.Str(required=False, allow_none=True)
+    birth_date = fields.Str(required=False, allow_none=True)
 
 
 class DeleteUserSchema(Schema):
