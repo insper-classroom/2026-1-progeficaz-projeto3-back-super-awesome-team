@@ -150,6 +150,14 @@ def _get_pendency_date(pendency, bill):
     )
 
 
+def _is_confirmed_group_expense(pendency, bill):
+    return bool(
+        bill.get("is_paid")
+        or pendency.get("is_resolved")
+        or (pendency.get("debtor_confirmed") and pendency.get("creditor_confirmed"))
+    )
+
+
 def _extract_confirmed_group_expenses(pendencies, bills_by_id, groups_by_id, user_email):
     expenses = []
 
@@ -157,6 +165,8 @@ def _extract_confirmed_group_expenses(pendencies, bills_by_id, groups_by_id, use
         bill_id = str(pendency.get("bill_id"))
         bill = bills_by_id.get(bill_id)
         if not bill:
+            continue
+        if not _is_confirmed_group_expense(pendency, bill):
             continue
 
         group_id = str(bill.get("group_id"))
@@ -216,7 +226,6 @@ def get_personal_summary_service(user_email):
                     mongo["pendencies"].find(
                         {
                             "bill_id": {"$in": bill_ids},
-                            "is_resolved": True,
                             "$or": [
                                 {"debtor_email": user_email},
                                 {"creditor_email": user_email},

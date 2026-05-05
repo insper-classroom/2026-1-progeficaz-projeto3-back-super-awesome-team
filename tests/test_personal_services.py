@@ -83,7 +83,9 @@ def test_get_personal_summary_aggregates_confirmed_group_expenses_and_user_contr
             "debtor_email": USER_EMAIL,
             "creditor_email": OTHER_EMAIL,
             "value": 80.0,
-            "is_resolved": True,
+            "debtor_confirmed": True,
+            "creditor_confirmed": True,
+            "is_resolved": False,
             "resolved_at": "2026-05-04T12:00:00Z",
         },
         {
@@ -94,6 +96,16 @@ def test_get_personal_summary_aggregates_confirmed_group_expenses_and_user_contr
             "value": 40.0,
             "is_resolved": True,
             "resolved_at": "2026-05-03T12:00:00Z",
+        },
+        {
+            "_id": ObjectId("507f1f77bcf86cd799439016"),
+            "bill_id": str(BILL_ID),
+            "debtor_email": USER_EMAIL,
+            "creditor_email": OTHER_EMAIL,
+            "value": 25.0,
+            "debtor_confirmed": True,
+            "creditor_confirmed": False,
+            "is_resolved": False,
         },
     ]
 
@@ -120,6 +132,8 @@ def test_get_personal_summary_aggregates_confirmed_group_expenses_and_user_contr
     assert result["charts"]["monthly_flow"] == [
         {"month": "2026-05", "expenses": 120.0, "contributions": 50.0}
     ]
+    pendencies_query = pendencies_col.find.call_args.args[0]
+    assert "is_resolved" not in pendencies_query
 
 
 def test_get_personal_summary_without_groups_skips_goal_lookup():
