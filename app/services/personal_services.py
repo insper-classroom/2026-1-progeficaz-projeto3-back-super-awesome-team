@@ -201,6 +201,48 @@ def _extract_confirmed_group_expenses(pendencies, bills_by_id, groups_by_id, use
     )
 
 
+def _extract_due_expenses(pendencies, bills_by_id, groups_by_id, user_email):
+    due_expenses = []
+
+    for pendency in pendencies:
+        bill_id = str(pendency.get("bill_id"))
+        bill = bills_by_id.get(bill_id)
+        if not bill:
+            continue
+        if pendency.get("debtor_email") != user_email:
+            continue
+        if _is_confirmed_group_expense(pendency, bill):
+            continue
+
+        due_date = bill.get("due_date")
+        if not due_date:
+            continue
+
+        group_id = str(bill.get("group_id"))
+        group = groups_by_id.get(group_id, {})
+        due_expenses.append(
+            _serialize(
+                {
+                    "_id": pendency.get("_id"),
+                    "bill_id": bill_id,
+                    "group_id": group_id,
+                    "group_name": group.get("name"),
+                    "category": bill.get("bill_type") or "Sem categoria",
+                    "value": _to_number(pendency.get("value")),
+                    "due_date": due_date,
+                    "creditor_email": pendency.get("creditor_email"),
+                    "debtor_confirmed": pendency.get("debtor_confirmed"),
+                    "creditor_confirmed": pendency.get("creditor_confirmed"),
+                }
+            )
+        )
+
+    return sorted(
+        due_expenses,
+        key=lambda item: _date_key(item.get("due_date")),
+    )
+
+
 def get_personal_summary_service(user_email):
     try:
         groups = list(
@@ -242,6 +284,12 @@ def get_personal_summary_service(user_email):
             groups_by_id,
             user_email,
         )
+        due_expenses = _extract_due_expenses(
+            pendencies,
+            bills_by_id,
+            groups_by_id,
+            user_email,
+        )
 
         total_expenses = sum(
             _to_number(expense.get("value")) for expense in group_expenses
@@ -262,6 +310,7 @@ def get_personal_summary_service(user_email):
 
         return {
             "expenses": group_expenses,
+            "due_expenses": due_expenses,
             "contributions": contributions,
             "summary": {
                 "total_expenses": round(total_expenses, 2),

@@ -63,6 +63,7 @@ def test_get_personal_summary_aggregates_confirmed_group_expenses_and_user_contr
             "group_id": str(GROUP_ID),
             "total_value": 200.0,
             "created_by": OTHER_EMAIL,
+            "due_date": "2026-05-05T00:00:00Z",
             "created_at": "2026-05-01T12:00:00Z",
         },
         {
@@ -121,7 +122,11 @@ def test_get_personal_summary_aggregates_confirmed_group_expenses_and_user_contr
     assert result["summary"]["total_received"] == 40.0
     assert result["summary"]["total_contributions"] == 50.0
     assert len(result["expenses"]) == 2
+    assert len(result["due_expenses"]) == 1
     assert len(result["contributions"]) == 1
+    assert result["due_expenses"][0]["category"] == "Alimentação"
+    assert result["due_expenses"][0]["value"] == 25.0
+    assert result["due_expenses"][0]["due_date"] == "2026-05-05T00:00:00Z"
     assert result["expenses"][0]["category"] == "Alimentação"
     assert result["expenses"][0]["group_name"] == "Casa"
     assert result["expenses"][0]["role"] == "debtor"
@@ -151,6 +156,7 @@ def test_get_personal_summary_without_groups_skips_goal_lookup():
 
     assert error is None
     assert result["expenses"] == []
+    assert result["due_expenses"] == []
     assert result["contributions"] == []
     goals_col.find.assert_not_called()
     bills_col.find.assert_not_called()

@@ -14,6 +14,7 @@ def test_get_personal_summary_ok(mock_service, client, auth_headers):
     mock_service.return_value = (
         {
             "expenses": [],
+            "due_expenses": [],
             "contributions": [],
             "summary": {
                 "total_expenses": 0,
