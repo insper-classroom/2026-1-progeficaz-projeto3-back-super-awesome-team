@@ -139,9 +139,11 @@ def test_get_personal_summary_aggregates_confirmed_group_expenses_and_user_contr
 
     assert error is None
     assert result["summary"]["total_expenses"] == 120.0
+    assert result["summary"]["total_owed"] == 25.0
     assert result["summary"]["total_paid"] == 80.0
     assert result["summary"]["total_received"] == 40.0
     assert result["summary"]["total_contributions"] == 50.0
+    assert result["summary"]["owed_count"] == 1
     assert len(result["expenses"]) == 2
     assert len(result["due_expenses"]) == 4
     assert len(result["contributions"]) == 1

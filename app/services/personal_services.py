@@ -245,6 +245,26 @@ def _extract_due_expenses(pendencies, bills_by_id, groups_by_id, user_email):
     )
 
 
+def _extract_pending_debts(pendencies, bills_by_id, user_email):
+    pending_debts = []
+
+    for pendency in pendencies:
+        if pendency.get("debtor_email") != user_email:
+            continue
+
+        bill_id = str(pendency.get("bill_id"))
+        bill = bills_by_id.get(bill_id)
+        if not bill:
+            continue
+
+        if _is_confirmed_group_expense(pendency, bill):
+            continue
+
+        pending_debts.append(pendency)
+
+    return pending_debts
+
+
 def get_personal_summary_service(user_email):
     try:
         groups = list(
@@ -292,10 +312,16 @@ def get_personal_summary_service(user_email):
             groups_by_id,
             user_email,
         )
+        pending_debts = _extract_pending_debts(
+            pendencies,
+            bills_by_id,
+            user_email,
+        )
 
         total_expenses = sum(
             _to_number(expense.get("value")) for expense in group_expenses
         )
+        total_owed = sum(_to_number(debt.get("value")) for debt in pending_debts)
         total_paid = sum(
             _to_number(expense.get("value"))
             for expense in group_expenses
@@ -316,10 +342,12 @@ def get_personal_summary_service(user_email):
             "contributions": contributions,
             "summary": {
                 "total_expenses": round(total_expenses, 2),
+                "total_owed": round(total_owed, 2),
                 "total_paid": round(total_paid, 2),
                 "total_received": round(total_received, 2),
                 "total_contributions": round(total_contributions, 2),
                 "expense_count": len(group_expenses),
+                "owed_count": len(pending_debts),
                 "contribution_count": len(contributions),
                 "group_count": len(groups),
             },

@@ -18,10 +18,12 @@ def test_get_personal_summary_ok(mock_service, client, auth_headers):
             "contributions": [],
             "summary": {
                 "total_expenses": 0,
+                "total_owed": 0,
                 "total_paid": 0,
                 "total_received": 0,
                 "total_contributions": 0,
                 "expense_count": 0,
+                "owed_count": 0,
                 "contribution_count": 0,
                 "group_count": 0,
             },
