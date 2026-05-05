@@ -12,7 +12,7 @@ def test_login_ok(mock_service, client):
     response = client.post(
         "/auth/sessions", json={"email": "test@example.com", "password": "secret123"}
     )
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert response.get_json() == {"token": "abc123"}
 
 
@@ -97,7 +97,7 @@ def test_forgot_password_ok(mock_service, client):
     response = client.post(
         "/auth/password-resets", json={"email": "test@example.com"}
     )
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert response.get_json() == {
         "message": "Se o e-mail existir, o código será enviado"
     }
@@ -114,7 +114,7 @@ def test_forgot_password_error(mock_service, client):
 def test_verify_reset_code_ok(mock_service, client):
     mock_service.return_value = ({"reset_token": "some-uuid"}, None)
     response = client.post(
-        "/auth/password-resets/verify",
+        "/auth/password-resets/verification",
         json={"email": "test@example.com", "code": "123456"},
     )
     assert response.status_code == 200
@@ -125,7 +125,7 @@ def test_verify_reset_code_ok(mock_service, client):
 def test_verify_reset_code_invalid(mock_service, client):
     mock_service.return_value = (None, {"error": "Código inválido ou expirado"})
     response = client.post(
-        "/auth/password-resets/verify",
+        "/auth/password-resets/verification",
         json={"email": "test@example.com", "code": "000000"},
     )
     assert response.status_code == 400

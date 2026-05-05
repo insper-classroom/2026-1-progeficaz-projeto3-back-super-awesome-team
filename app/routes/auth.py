@@ -58,7 +58,7 @@ def login():
         if error.get("error") == "E-mail ainda não verificado":
             return jsonify(error), 403
         return jsonify(error), 401
-    return jsonify(result), 200
+    return jsonify(result), 201
 
 
 @auth_bp.route("/auth/email-verifications/<token>", methods=["GET"])
@@ -119,10 +119,10 @@ def forgot_password():
     result, error = request_password_reset_service(data)
     if error:
         return jsonify(error), 400
-    return jsonify(result), 200
+    return jsonify(result), 201
 
 
-@auth_bp.route("/auth/password-resets/verify", methods=["POST"])
+@auth_bp.route("/auth/password-resets/verification", methods=["POST"])
 def verify_reset_code():
     data = request.get_json()
     result, error = verify_reset_code_service(data)
